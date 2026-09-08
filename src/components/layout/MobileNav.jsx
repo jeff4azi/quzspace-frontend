@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
 import logo from "../../assets/Quzspace_logo.png";
+import { useScrollDirection } from "../../hooks/useScrollDirection";
 import { 
   HiOutlineSquare2Stack, 
   HiOutlineCog6Tooth,
@@ -7,10 +8,25 @@ import {
 } from "react-icons/hi2";
 
 export default function MobileNav({ onCreateClick }) {
+  const { scrollDirection, isAtTop } = useScrollDirection();
+
+  const isHeaderHidden = scrollDirection === "down" && !isAtTop;
+
   return (
     <>
-      {/* Top Mobile Header Bar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-muted/30 px-4 py-3 flex items-center justify-between lg:hidden">
+      {/* Top Mobile Header Bar — Native App Scroll Reactive Header */}
+      <header
+        className={`
+          sticky top-0 z-30 px-4 py-3 flex items-center justify-between lg:hidden
+          transition-all duration-300 ease-out
+          ${isHeaderHidden ? "-translate-y-full" : "translate-y-0"}
+          ${
+            isAtTop
+              ? "bg-white border-b border-transparent shadow-none"
+              : "bg-white/90 backdrop-blur-md border-b border-muted/30 shadow-xs"
+          }
+        `}
+      >
         <Link to="/" className="flex items-center gap-2">
           <img 
             src={logo} 
@@ -28,7 +44,7 @@ export default function MobileNav({ onCreateClick }) {
         </Link>
       </header>
 
-      {/* Fixed Bottom Mobile Navigation Tab Bar */}
+      {/* Fixed Bottom Mobile Navigation Tab Bar — Always Visible */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-muted/30 px-6 py-2 flex items-center justify-around shadow-2xl lg:hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {/* Dashboard Tab */}
         <NavLink
