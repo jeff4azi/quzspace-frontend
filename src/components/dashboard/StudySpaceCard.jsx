@@ -18,11 +18,6 @@ export default function StudySpaceCard({
   return (
     <Link
       to={`/spaces/${id}`}
-      onClick={(e) => {
-        // Prevent default navigation for placeholder demo
-        e.preventDefault();
-        alert(`Opening Study Space: "${title}"`);
-      }}
       className="group bg-white p-5 sm:p-6 rounded-2xl border border-muted/30 shadow-xs hover:shadow-xl hover:border-brand/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
     >
       <div>
