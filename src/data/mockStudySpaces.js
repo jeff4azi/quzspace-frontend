@@ -6,8 +6,7 @@ export const mockStudySpaces = [
     fileCount: 8,
     lastAccessed: "2 hours ago",
     progressPercent: 85,
-    categoryBadge: "CS301",
-    badgeColor: "bg-blue-100 text-blue-800 border-blue-200",
+    accentStyle: "from-brand to-gray-700",
   },
   {
     id: "chem-202",
@@ -16,8 +15,7 @@ export const mockStudySpaces = [
     fileCount: 14,
     lastAccessed: "Yesterday",
     progressPercent: 60,
-    categoryBadge: "CHEM202",
-    badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    accentStyle: "from-emerald-700 to-brand",
   },
   {
     id: "cs-210",
@@ -26,8 +24,7 @@ export const mockStudySpaces = [
     fileCount: 12,
     lastAccessed: "3 days ago",
     progressPercent: 92,
-    categoryBadge: "CS210",
-    badgeColor: "bg-purple-100 text-purple-800 border-purple-200",
+    accentStyle: "from-brand to-slate-800",
   },
   {
     id: "bio-101",
@@ -36,8 +33,7 @@ export const mockStudySpaces = [
     fileCount: 6,
     lastAccessed: "5 days ago",
     progressPercent: 40,
-    categoryBadge: "BIO101",
-    badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
+    accentStyle: "from-amber-700 to-brand",
   },
   {
     id: "math-304",
@@ -46,8 +42,7 @@ export const mockStudySpaces = [
     fileCount: 9,
     lastAccessed: "1 week ago",
     progressPercent: 25,
-    categoryBadge: "MATH304",
-    badgeColor: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    accentStyle: "from-indigo-800 to-brand",
   },
   {
     id: "hist-115",
@@ -56,7 +51,6 @@ export const mockStudySpaces = [
     fileCount: 5,
     lastAccessed: "2 weeks ago",
     progressPercent: 100,
-    categoryBadge: "HIST115",
-    badgeColor: "bg-rose-100 text-rose-800 border-rose-200",
+    accentStyle: "from-rose-800 to-brand",
   },
 ];

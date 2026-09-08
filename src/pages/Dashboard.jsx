@@ -80,8 +80,7 @@ export default function Dashboard() {
                 fileCount={space.fileCount}
                 lastAccessed={space.lastAccessed}
                 progressPercent={space.progressPercent}
-                categoryBadge={space.categoryBadge}
-                badgeColor={space.badgeColor}
+                accentStyle={space.accentStyle}
               />
             ))}
           </div>

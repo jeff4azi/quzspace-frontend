@@ -52,10 +52,10 @@ export default function StudySpaceOverview() {
             </Button>
           </div>
 
-          {/* Title & Badge */}
+          {/* Title & Subject Tag */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <span className={`self-start text-xs font-bold px-2.5 py-1 rounded-full border ${space.badgeColor}`}>
-              {space.categoryBadge}
+            <span className="self-start inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100/90 text-brand border border-muted/20">
+              {space.subject}
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-brand tracking-tight">
               {space.title}

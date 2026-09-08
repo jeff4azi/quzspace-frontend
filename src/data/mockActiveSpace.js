@@ -8,8 +8,7 @@ export const mockActiveSpace = {
   lastAccessed: "2 hours ago",
   createdDate: "Aug 14, 2026",
   progressPercent: 85,
-  categoryBadge: "CS301",
-  badgeColor: "bg-blue-100 text-blue-800 border-blue-200",
+  accentStyle: "from-brand to-gray-700",
 };
 
 export function getSpaceById(id) {
