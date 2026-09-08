@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "../components/layout/AppLayout";
 import StudySpaceCard from "../components/dashboard/StudySpaceCard";
 import EmptyState from "../components/dashboard/EmptyState";
@@ -7,10 +8,11 @@ import { mockStudySpaces } from "../data/mockStudySpaces";
 import { HiPlus, HiSparkles } from "react-icons/hi2";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [spaces] = useState(mockStudySpaces);
 
   const handleCreateSpace = () => {
-    alert("Create New Study Space modal/flow placeholder.");
+    navigate("/create-space");
   };
 
   return (

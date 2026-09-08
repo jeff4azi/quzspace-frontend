@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import CreateStudySpace from "./pages/CreateStudySpace";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/spaces" element={<Dashboard />} />
+          <Route path="/create-space" element={<CreateStudySpace />} />
           <Route path="/settings" element={<Dashboard />} />
         </Routes>
       </BrowserRouter>

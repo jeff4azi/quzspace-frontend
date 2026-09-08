@@ -44,7 +44,8 @@ export default function MobileNav({ onCreateClick }) {
         </NavLink>
 
         {/* Raised Center Create Button */}
-        <button
+        <Link
+          to="/create-space"
           onClick={onCreateClick}
           className="flex flex-col items-center justify-center -mt-5"
           aria-label="Create Study Space"
@@ -53,7 +54,7 @@ export default function MobileNav({ onCreateClick }) {
             <HiPlus className="w-6 h-6" />
           </div>
           <span className="text-[11px] font-bold text-brand mt-1">Create</span>
-        </button>
+        </Link>
 
         {/* Settings Tab */}
         <NavLink
