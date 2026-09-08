@@ -81,6 +81,7 @@ export default function Dashboard() {
                 lastAccessed={space.lastAccessed}
                 progressPercent={space.progressPercent}
                 accentStyle={space.accentStyle}
+                activeMembers={space.activeMembers}
               />
             ))}
           </div>

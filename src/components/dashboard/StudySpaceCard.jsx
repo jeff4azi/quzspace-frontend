@@ -15,6 +15,7 @@ import {
   HiOutlineShare,
   HiOutlineTrash
 } from "react-icons/hi2";
+import AvatarStack from "../shared/AvatarStack";
 
 // Subject icon resolver helper
 function getSubjectIcon(subject = "") {
@@ -35,6 +36,7 @@ export default function StudySpaceCard({
   lastAccessed,
   progressPercent,
   accentStyle = "from-brand to-gray-700",
+  activeMembers = [],
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const SubjectIcon = getSubjectIcon(subject);
@@ -119,16 +121,29 @@ export default function StudySpaceCard({
               {title}
             </h3>
 
-            {/* Metadata Row */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 font-medium mt-2">
-              <span className="flex items-center gap-1.5">
-                <HiOutlineDocumentText className="w-4 h-4 text-brand" />
-                {fileCount} {fileCount === 1 ? "file" : "files"}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <HiOutlineClock className="w-4 h-4 text-muted" />
-                {lastAccessed}
-              </span>
+            {/* Metadata Row & Avatar Stack */}
+            <div className="flex items-center justify-between gap-2 mt-2 pt-1 flex-wrap">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 font-medium">
+                <span className="flex items-center gap-1.5">
+                  <HiOutlineDocumentText className="w-4 h-4 text-brand" />
+                  {fileCount} {fileCount === 1 ? "file" : "files"}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <HiOutlineClock className="w-4 h-4 text-muted" />
+                  {lastAccessed}
+                </span>
+              </div>
+
+              {/* Active Members Avatar Stack (Only when > 1 member) */}
+              {activeMembers && activeMembers.length > 1 && (
+                <div className="shrink-0">
+                  <AvatarStack
+                    viewers={activeMembers}
+                    size="sm"
+                    labelSuffix="active"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

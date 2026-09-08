@@ -111,7 +111,7 @@ export default function Sidebar() {
           <Button
             variant="secondary"
             fullWidth
-            onClick={() => alert("Upgrade to Pro placeholder")}
+            onClick={() => navigate("/settings")}
             className="py-1.5 text-xs font-bold border-muted/40 hover:bg-white"
           >
             Upgrade Plan
@@ -123,11 +123,11 @@ export default function Sidebar() {
           <div className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/80 transition-colors">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-full bg-brand text-light font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
-                JD
+                JA
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-brand truncate">Jane Doe</p>
-                <p className="text-[11px] text-gray-500 truncate">jane@example.com</p>
+                <p className="text-xs font-bold text-brand truncate">Jeffrey A.</p>
+                <p className="text-[11px] text-gray-500 truncate">jeffrey@quzspace.io</p>
               </div>
             </div>
 
@@ -142,7 +142,15 @@ export default function Sidebar() {
 
           {/* User Dropdown Menu */}
           {showUserDropdown && (
-            <div className="absolute bottom-12 right-0 w-48 bg-white rounded-xl shadow-xl border border-muted/30 p-1.5 z-50 animate-in fade-in slide-in-from-bottom-2">
+            <div className="absolute bottom-12 right-0 w-48 bg-white rounded-xl shadow-xl border border-muted/30 p-1.5 z-50 animate-in fade-in slide-in-from-bottom-2 space-y-1">
+              <Link
+                to="/settings"
+                onClick={() => setShowUserDropdown(false)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
+              >
+                <HiOutlineCog6Tooth className="w-4 h-4 text-gray-500" />
+                <span>Account Settings</span>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left"

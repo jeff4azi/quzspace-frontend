@@ -7,6 +7,32 @@ export const mockQuizzes = [
     createdAt: "2 hours ago",
     bestScore: 85,
     attemptsCount: 2,
+    leaderboard: [
+      {
+        id: "p-1",
+        name: "Sarah Jenkins",
+        avatarInitials: "SJ",
+        avatarColor: "bg-amber-600",
+        score: 95,
+        completedAt: "1 hour ago",
+      },
+      {
+        id: "p-2",
+        name: "Jeffrey A.",
+        avatarInitials: "JA",
+        avatarColor: "bg-brand",
+        score: 85,
+        completedAt: "2 hours ago",
+      },
+      {
+        id: "p-3",
+        name: "Alex Chen",
+        avatarInitials: "AC",
+        avatarColor: "bg-blue-600",
+        score: 80,
+        completedAt: "Yesterday",
+      },
+    ],
   },
   {
     id: "q-102",
@@ -16,6 +42,40 @@ export const mockQuizzes = [
     createdAt: "Yesterday",
     bestScore: 90,
     attemptsCount: 3,
+    leaderboard: [
+      {
+        id: "p-1",
+        name: "David Rodriguez",
+        avatarInitials: "DR",
+        avatarColor: "bg-emerald-600",
+        score: 100,
+        completedAt: "Yesterday",
+      },
+      {
+        id: "p-2",
+        name: "Sarah Jenkins",
+        avatarInitials: "SJ",
+        avatarColor: "bg-amber-600",
+        score: 90,
+        completedAt: "Yesterday",
+      },
+      {
+        id: "p-3",
+        name: "Elena Torres",
+        avatarInitials: "ET",
+        avatarColor: "bg-purple-600",
+        score: 80,
+        completedAt: "3 days ago",
+      },
+      {
+        id: "p-4",
+        name: "Marcus Lee",
+        avatarInitials: "ML",
+        avatarColor: "bg-rose-600",
+        score: 70,
+        completedAt: "5 days ago",
+      },
+    ],
   },
   {
     id: "q-103",
@@ -25,6 +85,7 @@ export const mockQuizzes = [
     createdAt: "Aug 10, 2026",
     bestScore: null,
     attemptsCount: 0,
+    leaderboard: [], // Represents newly generated quiz with 0 attempts
   },
   {
     id: "q-104",
@@ -34,5 +95,23 @@ export const mockQuizzes = [
     createdAt: "Aug 05, 2026",
     bestScore: 70,
     attemptsCount: 1,
+    leaderboard: [
+      {
+        id: "p-1",
+        name: "Elena Torres",
+        avatarInitials: "ET",
+        avatarColor: "bg-purple-600",
+        score: 85,
+        completedAt: "2 days ago",
+      },
+      {
+        id: "p-2",
+        name: "Jeffrey A.",
+        avatarInitials: "JA",
+        avatarColor: "bg-brand",
+        score: 70,
+        completedAt: "Aug 05",
+      },
+    ],
   },
 ];

@@ -5,6 +5,7 @@ import FlashcardsTab from "./tabs/FlashcardsTab";
 import QuizTab from "./tabs/QuizTab";
 import ChatTab from "./tabs/ChatTab";
 import WeakAreasTab from "./tabs/WeakAreasTab";
+import CommunityTab from "./tabs/CommunityTab";
 import ProgressTab from "./tabs/ProgressTab";
 
 import { 
@@ -14,6 +15,7 @@ import {
   HiOutlineQuestionMarkCircle, 
   HiOutlineChatBubbleLeftRight, 
   HiOutlineExclamationTriangle, 
+  HiOutlineUsers,
   HiOutlineArrowTrendingUp 
 } from "react-icons/hi2";
 
@@ -24,6 +26,7 @@ export const TABS_CONFIG = [
   { id: "quiz", label: "Quiz", icon: HiOutlineQuestionMarkCircle, component: QuizTab },
   { id: "chat", label: "AI Chat", icon: HiOutlineChatBubbleLeftRight, component: ChatTab },
   { id: "weak-areas", label: "Weak Areas", icon: HiOutlineExclamationTriangle, component: WeakAreasTab },
+  { id: "community", label: "Community", icon: HiOutlineUsers, component: CommunityTab },
   { id: "progress", label: "Progress", icon: HiOutlineArrowTrendingUp, component: ProgressTab },
 ];
 

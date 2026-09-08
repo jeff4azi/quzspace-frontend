@@ -11,6 +11,7 @@ import {
   HiCheckCircle,
   HiOutlineSparkles
 } from "react-icons/hi2";
+import QuizLeaderboardPreview from "./QuizLeaderboardPreview";
 
 function getDifficultyBadge(difficulty) {
   switch (difficulty) {
@@ -119,6 +120,9 @@ export default function QuizCard({ quiz, onDelete, onRetake }) {
             <span>• {quiz.attemptsCount} {quiz.attemptsCount === 1 ? "attempt" : "attempts"}</span>
           )}
         </div>
+
+        {/* Per-Quiz Leaderboard Preview */}
+        <QuizLeaderboardPreview leaderboard={quiz.leaderboard} />
       </div>
 
       {/* Score Section & Action CTA */}

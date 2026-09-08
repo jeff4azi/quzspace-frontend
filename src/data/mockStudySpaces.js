@@ -7,6 +7,12 @@ export const mockStudySpaces = [
     lastAccessed: "2 hours ago",
     progressPercent: 85,
     accentStyle: "from-brand to-gray-700",
+    activeMembers: [
+      { id: "v-1", name: "Alex Chen", avatarInitials: "AC", avatarColor: "bg-blue-600" },
+      { id: "v-2", name: "Sarah Jenkins", avatarInitials: "SJ", avatarColor: "bg-amber-600" },
+      { id: "v-3", name: "David Rodriguez", avatarInitials: "DR", avatarColor: "bg-emerald-600" },
+      { id: "v-4", name: "Elena Torres", avatarInitials: "ET", avatarColor: "bg-purple-600" },
+    ],
   },
   {
     id: "chem-202",
@@ -16,6 +22,11 @@ export const mockStudySpaces = [
     lastAccessed: "Yesterday",
     progressPercent: 60,
     accentStyle: "from-emerald-700 to-brand",
+    activeMembers: [
+      { id: "v-3", name: "David Rodriguez", avatarInitials: "DR", avatarColor: "bg-emerald-600" },
+      { id: "v-4", name: "Elena Torres", avatarInitials: "ET", avatarColor: "bg-purple-600" },
+      { id: "v-5", name: "Marcus Lee", avatarInitials: "ML", avatarColor: "bg-rose-600" },
+    ],
   },
   {
     id: "cs-210",
@@ -25,6 +36,10 @@ export const mockStudySpaces = [
     lastAccessed: "3 days ago",
     progressPercent: 92,
     accentStyle: "from-brand to-slate-800",
+    activeMembers: [
+      { id: "v-1", name: "Alex Chen", avatarInitials: "AC", avatarColor: "bg-blue-600" },
+      { id: "v-6", name: "Hannah Patel", avatarInitials: "HP", avatarColor: "bg-indigo-600" },
+    ],
   },
   {
     id: "bio-101",
@@ -34,6 +49,9 @@ export const mockStudySpaces = [
     lastAccessed: "5 days ago",
     progressPercent: 40,
     accentStyle: "from-amber-700 to-brand",
+    activeMembers: [
+      { id: "v-0", name: "Jeffrey A. (Owner)", avatarInitials: "JA", avatarColor: "bg-brand" },
+    ], // Single owner alone edge case!
   },
   {
     id: "math-304",
@@ -43,6 +61,11 @@ export const mockStudySpaces = [
     lastAccessed: "1 week ago",
     progressPercent: 25,
     accentStyle: "from-indigo-800 to-brand",
+    activeMembers: [
+      { id: "v-5", name: "Marcus Lee", avatarInitials: "ML", avatarColor: "bg-rose-600" },
+      { id: "v-2", name: "Sarah Jenkins", avatarInitials: "SJ", avatarColor: "bg-amber-600" },
+      { id: "v-4", name: "Elena Torres", avatarInitials: "ET", avatarColor: "bg-purple-600" },
+    ],
   },
   {
     id: "hist-115",
@@ -52,5 +75,9 @@ export const mockStudySpaces = [
     lastAccessed: "2 weeks ago",
     progressPercent: 100,
     accentStyle: "from-rose-800 to-brand",
+    activeMembers: [
+      { id: "v-6", name: "Hannah Patel", avatarInitials: "HP", avatarColor: "bg-indigo-600" },
+      { id: "v-3", name: "David Rodriguez", avatarInitials: "DR", avatarColor: "bg-emerald-600" },
+    ],
   },
 ];

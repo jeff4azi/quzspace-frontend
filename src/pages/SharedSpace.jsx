@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   HiXMark,
@@ -18,7 +18,10 @@ import Button from "../components/ui/Button";
 import SummaryTab from "../components/study-space/tabs/SummaryTab";
 import FlashcardsTab from "../components/study-space/tabs/FlashcardsTab";
 import QuizTab from "../components/study-space/tabs/QuizTab";
+import AvatarStack from "../components/shared/AvatarStack";
+import Leaderboard from "../components/study-space/Leaderboard";
 import { mockSharedSpace } from "../data/mockSharedSpace";
+import { mockActiveViewersPool, mockLeaderboard } from "../data/mockPresence";
 
 const SHARED_TABS = [
   { id: "summary", label: "Summary", icon: HiOutlineDocumentText, component: SummaryTab },
@@ -30,6 +33,11 @@ export default function SharedSpace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showBanner, setShowBanner] = useState(true);
 
+  // Live active viewers state (Simulating realtime presence join/leave)
+  const [activeViewers, setActiveViewers] = useState(
+    mockActiveViewersPool.slice(0, 4)
+  );
+
   const space = mockSharedSpace;
   const activeTabId = searchParams.get("tab") || "summary";
   const activeTabObj = SHARED_TABS.find((t) => t.id === activeTabId) || SHARED_TABS[0];
@@ -38,6 +46,24 @@ export default function SharedSpace() {
   const handleTabClick = (id) => {
     setSearchParams({ tab: id });
   };
+
+  // Subtle interval simulation: every 18s a viewer joins or leaves
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveViewers((prev) => {
+        if (prev.length < 5) {
+          // Add next viewer from pool
+          const nextViewer = mockActiveViewersPool[prev.length % mockActiveViewersPool.length];
+          return [...prev, nextViewer];
+        } else {
+          // Remove last viewer
+          return prev.slice(0, 3);
+        }
+      });
+    }, 18000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-light flex flex-col justify-between">
@@ -90,7 +116,7 @@ export default function SharedSpace() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-4 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2.5 flex-wrap">
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-brand/10 text-brand border border-brand/20">
                   {space.subject}
                 </span>
@@ -98,6 +124,9 @@ export default function SharedSpace() {
                   <HiUserCircle className="w-4 h-4 text-brand" />
                   Shared by {space.ownerName}
                 </span>
+
+                {/* Social Active Viewers Cluster */}
+                <AvatarStack viewers={activeViewers} />
               </div>
 
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-darker tracking-tight leading-tight">
@@ -132,7 +161,7 @@ export default function SharedSpace() {
           </div>
         </div>
 
-        {/* Read-Only Shared Tabs Bar */}
+        {/* Read-Only Shared Tabs Bar & Grid Layout */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
           <div className="border-b border-muted/30 mb-6">
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
@@ -162,32 +191,40 @@ export default function SharedSpace() {
             </div>
           </div>
 
-          {/* Active Tab Content Area */}
-          <div className="min-h-[400px] mb-12">
-            <ActiveComponent isReadOnly={true} />
-          </div>
+          {/* 2-Column Responsive Layout: Left Content, Right Leaderboard */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mb-12">
+            {/* Active Tab Content Area (2 Cols on Desktop) */}
+            <div className="lg:col-span-2 min-h-[400px]">
+              <ActiveComponent isReadOnly={true} />
 
-          {/* Access Gate / Free-Tier Upgrade Prompt Card */}
-          <div className="mb-12 bg-gradient-to-br from-brand/10 via-brand/5 to-white border border-brand/20 p-6 sm:p-8 rounded-3xl space-y-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
-            <div className="space-y-1.5 max-w-xl">
-              <div className="flex items-center gap-1.5 justify-center sm:justify-start text-xs font-bold uppercase tracking-wider text-brand">
-                <HiSparkles className="w-4 h-4 text-amber-500" />
-                <span>Unlock Full AI Power</span>
+              {/* Access Gate / Free-Tier Upgrade Prompt Card */}
+              <div className="mt-8 bg-gradient-to-br from-brand/10 via-brand/5 to-white border border-brand/20 p-6 sm:p-8 rounded-3xl space-y-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
+                <div className="space-y-1.5 max-w-xl">
+                  <div className="flex items-center gap-1.5 justify-center sm:justify-start text-xs font-bold uppercase tracking-wider text-brand">
+                    <HiSparkles className="w-4 h-4 text-amber-500" />
+                    <span>Unlock Full AI Power</span>
+                  </div>
+                  <h3 className="text-xl font-extrabold text-darker">
+                    Want to create your own Study Spaces?
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                    Sign up free to upload your own PDFs, get 24/7 AI Chat tutoring, generate custom quizzes, and track weak areas automatically.
+                  </p>
+                </div>
+
+                <div className="shrink-0">
+                  <Link to="/signup">
+                    <Button variant="primary" size="md" className="font-bold shadow-md">
+                      Sign Up Free
+                    </Button>
+                  </Link>
+                </div>
               </div>
-              <h3 className="text-xl font-extrabold text-darker">
-                Want to create your own Study Spaces?
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Sign up free to upload your own PDFs, get 24/7 AI Chat tutoring, generate custom quizzes, and track weak areas automatically.
-              </p>
             </div>
 
-            <div className="shrink-0">
-              <Link to="/signup">
-                <Button variant="primary" size="md" className="font-bold shadow-md">
-                  Sign Up Free
-                </Button>
-              </Link>
+            {/* Space Leaderboard Widget (1 Col on Desktop) */}
+            <div className="lg:col-span-1 sticky top-20">
+              <Leaderboard entries={mockLeaderboard} currentUserId="u-7" />
             </div>
           </div>
         </div>

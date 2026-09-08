@@ -39,8 +39,8 @@ export default function MobileNav({ onCreateClick }) {
         </Link>
 
         {/* User avatar button */}
-        <Link to="/login" className="w-8 h-8 rounded-full bg-brand text-light font-bold text-xs flex items-center justify-center shadow-xs">
-          JD
+        <Link to="/settings" className="w-8 h-8 rounded-full bg-brand text-light font-bold text-xs flex items-center justify-center shadow-xs">
+          JA
         </Link>
       </header>
 
@@ -74,11 +74,8 @@ export default function MobileNav({ onCreateClick }) {
 
         {/* Settings Tab */}
         <NavLink
-          to="#"
-          onClick={(e) => {
-            e.preventDefault();
-            alert("Settings tab placeholder.");
-          }}
+          to="/settings"
+          end
           className={({ isActive }) => `
             flex flex-col items-center gap-1 text-xs font-semibold transition-colors
             ${isActive ? "text-brand" : "text-gray hover:text-brand"}
