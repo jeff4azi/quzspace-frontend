@@ -5,6 +5,8 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import CreateStudySpace from "./pages/CreateStudySpace";
 import StudySpaceOverview from "./pages/StudySpaceOverview";
+import QuizTaking from "./pages/QuizTaking";
+import QuizResults from "./pages/QuizResults";
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/spaces" element={<Dashboard />} />
           <Route path="/spaces/:id" element={<StudySpaceOverview />} />
+          <Route path="/spaces/:id/quiz/:quizId" element={<QuizTaking />} />
+          <Route path="/spaces/:id/quiz/:quizId/results" element={<QuizResults />} />
           <Route path="/create-space" element={<CreateStudySpace />} />
           <Route path="/settings" element={<Dashboard />} />
         </Routes>

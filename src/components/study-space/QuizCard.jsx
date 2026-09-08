@@ -74,21 +74,23 @@ export default function QuizCard({ quiz, onDelete, onRetake }) {
             {/* Dropdown Menu */}
             {showDropdown && (
               <div className="absolute right-0 top-8 w-44 bg-white rounded-xl shadow-xl border border-muted/30 p-1.5 z-50 animate-in fade-in">
-                <button
-                  onClick={(e) => handleAction(e, onRetake, "Retake Quiz")}
+                <Link
+                  to={`/spaces/cs-301/quiz/${quiz.id}`}
+                  onClick={() => setShowDropdown(false)}
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
                 >
                   <HiOutlineArrowPath className="w-4 h-4 text-gray-500" />
                   <span>Retake Quiz</span>
-                </button>
+                </Link>
                 {quiz.bestScore !== null && (
-                  <button
-                    onClick={(e) => handleAction(e, null, "View Results")}
+                  <Link
+                    to={`/spaces/cs-301/quiz/${quiz.id}/results`}
+                    onClick={() => setShowDropdown(false)}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
                   >
                     <HiOutlineChartBar className="w-4 h-4 text-gray-500" />
                     <span>View Results</span>
-                  </button>
+                  </Link>
                 )}
                 <button
                   onClick={(e) => handleAction(e, onDelete, "Delete Quiz")}
@@ -148,11 +150,7 @@ export default function QuizCard({ quiz, onDelete, onRetake }) {
         {/* Take Quiz Button */}
         <Link
           to={`/spaces/cs-301/quiz/${quiz.id}`}
-          onClick={(e) => {
-            e.preventDefault();
-            alert(`Navigating to Quiz session for "${quiz.title}"`);
-          }}
-          className="w-full inline-flex items-center justify-center gap-2 bg-brand text-light py-2.5 px-4 rounded-xl text-xs font-bold shadow-xs hover:bg-darker transition-all"
+          className="w-full inline-flex items-center justify-center gap-2 bg-brand text-light py-2.5 px-4 rounded-xl text-xs font-bold shadow-xs hover:bg-darker transition-all cursor-pointer"
         >
           <HiOutlinePlay className="w-4 h-4" />
           <span>{quiz.bestScore !== null ? "Retake Quiz" : "Take Quiz"}</span>
