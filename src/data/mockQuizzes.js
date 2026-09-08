@@ -1,0 +1,38 @@
+export const mockQuizzes = [
+  {
+    id: "q-101",
+    title: "Comprehensive OSI Layer & Protocols Quiz",
+    questionCount: 20,
+    difficulty: "Medium",
+    createdAt: "2 hours ago",
+    bestScore: 85,
+    attemptsCount: 2,
+  },
+  {
+    id: "q-102",
+    title: "Subnetting & IPv4 Address Calculation",
+    questionCount: 10,
+    difficulty: "Hard",
+    createdAt: "Yesterday",
+    bestScore: 90,
+    attemptsCount: 3,
+  },
+  {
+    id: "q-103",
+    title: "TCP vs UDP & Transport Layer Mechanics",
+    questionCount: 50,
+    difficulty: "Easy",
+    createdAt: "Aug 10, 2026",
+    bestScore: null,
+    attemptsCount: 0,
+  },
+  {
+    id: "q-104",
+    title: "Network Security & Wireless Fundamentals",
+    questionCount: 20,
+    difficulty: "Mixed",
+    createdAt: "Aug 05, 2026",
+    bestScore: 70,
+    attemptsCount: 1,
+  },
+];
