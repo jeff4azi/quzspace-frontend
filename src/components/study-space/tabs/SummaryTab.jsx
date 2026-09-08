@@ -11,7 +11,7 @@ import {
   HiOutlineSparkles
 } from "react-icons/hi2";
 
-export default function SummaryTab() {
+export default function SummaryTab({ isReadOnly = false }) {
   const [summary, setSummary] = useState(mockSummary);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
@@ -45,15 +45,17 @@ export default function SummaryTab() {
           </span>
         </div>
 
-        <Button
-          variant="secondary"
-          isLoading={isRegenerating}
-          onClick={handleRegenerate}
-          className="w-full sm:w-auto py-2.5 px-4 text-xs font-bold"
-        >
-          <HiOutlineArrowPath className="w-4 h-4" />
-          <span>Regenerate Summary</span>
-        </Button>
+        {!isReadOnly && (
+          <Button
+            variant="secondary"
+            isLoading={isRegenerating}
+            onClick={handleRegenerate}
+            className="w-full sm:w-auto py-2.5 px-4 text-xs font-bold"
+          >
+            <HiOutlineArrowPath className="w-4 h-4" />
+            <span>Regenerate Summary</span>
+          </Button>
+        )}
       </div>
 
       {/* 1. Key Takeaways Section */}

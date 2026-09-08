@@ -6,7 +6,7 @@ import Button from "../../ui/Button";
 import { mockQuizzes } from "../../../data/mockQuizzes";
 import { HiPlus } from "react-icons/hi2";
 
-export default function QuizTab() {
+export default function QuizTab({ isReadOnly = false }) {
   const [quizzes, setQuizzes] = useState(mockQuizzes);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -36,14 +36,16 @@ export default function QuizTab() {
           </span>
         </div>
 
-        <Button
-          variant="primary"
-          onClick={() => setIsModalOpen(true)}
-          className="w-full sm:w-auto py-2.5 px-4 text-xs font-bold"
-        >
-          <HiPlus className="w-4 h-4" />
-          <span>Generate New Quiz</span>
-        </Button>
+        {!isReadOnly && (
+          <Button
+            variant="primary"
+            onClick={() => setIsModalOpen(true)}
+            className="w-full sm:w-auto py-2.5 px-4 text-xs font-bold"
+          >
+            <HiPlus className="w-4 h-4" />
+            <span>Generate New Quiz</span>
+          </Button>
+        )}
       </div>
 
       {/* Generate Quiz Modal */}

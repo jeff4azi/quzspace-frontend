@@ -10,7 +10,7 @@ import {
   HiOutlineAcademicCap 
 } from "react-icons/hi2";
 
-export default function FlashcardsTab() {
+export default function FlashcardsTab({ isReadOnly = false }) {
   const [cards, setCards] = useState(mockFlashcards);
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "study"
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -89,16 +89,18 @@ export default function FlashcardsTab() {
             </button>
           </div>
 
-          {/* Regenerate Button */}
-          <Button
-            variant="secondary"
-            isLoading={isRegenerating}
-            onClick={handleRegenerate}
-            className="w-full sm:w-auto py-2.5 px-4 text-xs font-bold"
-          >
-            <HiOutlineArrowPath className="w-4 h-4" />
-            <span>Regenerate Deck</span>
-          </Button>
+          {/* Regenerate Button (Owner only) */}
+          {!isReadOnly && (
+            <Button
+              variant="secondary"
+              isLoading={isRegenerating}
+              onClick={handleRegenerate}
+              className="w-full sm:w-auto py-2.5 px-4 text-xs font-bold"
+            >
+              <HiOutlineArrowPath className="w-4 h-4" />
+              <span>Regenerate Deck</span>
+            </Button>
+          )}
 
         </div>
 
