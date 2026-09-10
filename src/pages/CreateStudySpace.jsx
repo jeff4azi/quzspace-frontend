@@ -74,7 +74,7 @@ export default function CreateStudySpace() {
 
   return (
     <AppLayout>
-      <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8">
+      <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 pb-16 lg:pb-0">
         
         {/* Top Header & Back Button */}
         <div>

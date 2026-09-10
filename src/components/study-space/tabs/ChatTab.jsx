@@ -93,7 +93,7 @@ export default function ChatTab() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-250px)] min-h-[580px] max-h-[760px] bg-white rounded-2xl border border-muted/30 shadow-xs overflow-hidden pb-16 lg:pb-0">
+    <div className="flex flex-col h-[calc(100vh-280px)] lg:h-[calc(100vh-250px)] min-h-[500px] max-h-[760px] bg-white rounded-2xl border border-muted/30 shadow-xs overflow-hidden pb-36 lg:pb-0">
       {/* Header bar */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-muted/20 bg-light/50 shrink-0">
         <div className="flex items-center gap-3">

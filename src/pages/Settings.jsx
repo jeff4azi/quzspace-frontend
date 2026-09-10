@@ -142,11 +142,11 @@ export default function Settings() {
 
   return (
     <AppLayout>
-      <div className="space-y-8 max-w-4xl pb-12">
+      <div className="space-y-8 max-w-4xl pb-20 lg:pb-0">
         
         {/* Toast Notification Banner */}
         {toastMessage && (
-          <div className="fixed bottom-6 right-6 z-50 bg-brand text-light px-4 py-3 rounded-2xl shadow-xl border border-muted/30 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="fixed bottom-24 lg:bottom-6 right-6 z-50 bg-brand text-light px-4 py-3 rounded-2xl shadow-xl border border-muted/30 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-3 duration-200">
             <HiCheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
             <span className="text-xs font-semibold">{toastMessage}</span>
             <button

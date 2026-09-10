@@ -36,7 +36,7 @@ export default function FlashcardsTab({ isReadOnly = false }) {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8 pb-16 lg:pb-0">
       
       {/* Header Row: Title, Count Badge, Segmented Mode Switcher & Regenerate Button */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-muted/20">

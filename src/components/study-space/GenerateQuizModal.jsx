@@ -66,7 +66,7 @@ export default function GenerateQuizModal({ isOpen, onClose, onQuizGenerated }) 
               Number of Questions
             </label>
             <div className="grid grid-cols-4 p-1 rounded-xl bg-light border border-muted/30 text-xs font-bold">
-              {[10, 20, 50, 100].map((count) => (
+              {[10, 20, 30, 50].map((count) => (
                 <button
                   key={count}
                   type="button"

@@ -23,7 +23,7 @@ export default function QuizTab({ isReadOnly = false }) {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8 pb-16 lg:pb-0">
       
       {/* Header Row: Title, Count Badge & Generate Quiz Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-muted/20">
