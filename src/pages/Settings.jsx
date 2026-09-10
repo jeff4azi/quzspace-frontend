@@ -4,6 +4,7 @@ import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import Toggle from "../components/ui/Toggle";
 import { mockUser } from "../data/mockUser";
+import { usePlan } from "../context/PlanContext";
 import {
   HiUser,
   HiSparkles,
@@ -31,12 +32,12 @@ const AVATAR_COLORS = [
 ];
 
 export default function Settings() {
+  const { userPlan: planState, setUserPlan: setPlanState } = usePlan();
   // Local state initialized from mock user
   const [user, setUser] = useState(mockUser);
   const [name, setName] = useState(mockUser.name);
   const [email, setEmail] = useState(mockUser.email);
   const [avatarColor, setAvatarColor] = useState(mockUser.avatarColor);
-  const [planState, setPlanState] = useState(mockUser.plan); // "free" | "premium"
 
   // Password change state
   const [showPasswordSection, setShowPasswordSection] = useState(false);

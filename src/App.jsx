@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { PlanProvider } from "./context/PlanContext";
+import DevPlanSwitcher from "./components/shared/DevPlanSwitcher";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -12,24 +14,26 @@ import Settings from "./pages/Settings";
 
 function App() {
   return (
-    // Apply default bg and text at root level using v4 CSS variable utilities
-    <div className="min-h-screen bg-light text-gray">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/spaces" element={<Dashboard />} />
-          <Route path="/spaces/:id" element={<StudySpaceOverview />} />
-          <Route path="/spaces/:id/quiz/:quizId" element={<QuizTaking />} />
-          <Route path="/spaces/:id/quiz/:quizId/results" element={<QuizResults />} />
-          <Route path="/s/:shareCode" element={<SharedSpace />} />
-          <Route path="/create-space" element={<CreateStudySpace />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <PlanProvider>
+      <div className="min-h-screen bg-light text-gray">
+        <BrowserRouter>
+          <DevPlanSwitcher />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/spaces" element={<Dashboard />} />
+            <Route path="/spaces/:id" element={<StudySpaceOverview />} />
+            <Route path="/spaces/:id/quiz/:quizId" element={<QuizTaking />} />
+            <Route path="/spaces/:id/quiz/:quizId/results" element={<QuizResults />} />
+            <Route path="/s/:shareCode" element={<SharedSpace />} />
+            <Route path="/create-space" element={<CreateStudySpace />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </PlanProvider>
   );
 }
 
