@@ -197,12 +197,12 @@ export default function SharedSpace() {
             <div className="lg:col-span-2 min-h-[400px]">
               <ActiveComponent isReadOnly={true} />
 
-              {/* Access Gate / Free-Tier Upgrade Prompt Card */}
+              {/* Create Your Own Space CTA Card */}
               <div className="mt-8 bg-gradient-to-br from-brand/10 via-brand/5 to-white border border-brand/20 p-6 sm:p-8 rounded-3xl space-y-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
                 <div className="space-y-1.5 max-w-xl">
                   <div className="flex items-center gap-1.5 justify-center sm:justify-start text-xs font-bold uppercase tracking-wider text-brand">
                     <HiSparkles className="w-4 h-4 text-amber-500" />
-                    <span>Unlock Full AI Power</span>
+                    <span>AI-Powered Learning</span>
                   </div>
                   <h3 className="text-xl font-extrabold text-darker">
                     Want to create your own Study Spaces?

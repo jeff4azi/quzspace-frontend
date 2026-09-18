@@ -4,12 +4,7 @@ export const mockUser = {
   email: "jeffrey@quzspace.io",
   avatarInitials: "JA",
   avatarColor: "bg-brand",
-  plan: "free", // "free" | "premium"
   joinedDate: "August 2026",
-  studySpacesUsed: 2,
-  studySpacesLimit: 3,
-  sharedSpacesUsed: 1,
-  sharedSpacesLimit: 3,
   preferences: {
     emailNotifications: true,
     studyReminders: true,

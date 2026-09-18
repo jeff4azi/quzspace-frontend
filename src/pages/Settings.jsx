@@ -310,9 +310,8 @@ export default function Settings() {
 
               <p className="text-xs text-gray-600 leading-relaxed bg-rose-50/50 p-3 rounded-xl border border-rose-100">
                 Are you sure you want to delete your account? All your study
-                spaces (<strong>{user.studySpacesUsed} spaces</strong>), AI
-                summaries, flashcard mastery records, and quiz history will be
-                erased immediately.
+                spaces, AI summaries, flashcard mastery records, and quiz
+                history will be erased immediately.
               </p>
 
               <div className="space-y-1.5">

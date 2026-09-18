@@ -53,7 +53,7 @@ export default function Home() {
             </div>
 
             <p className="text-xs text-muted/70 mt-4">
-              Free plan available • No credit card required
+              100% Free • No credit card required
             </p>
           </div>
         </section>
