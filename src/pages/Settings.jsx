@@ -9,11 +9,8 @@ import {
   HiAdjustmentsHorizontal,
   HiExclamationTriangle,
   HiCheckCircle,
-  HiLockClosed,
   HiCheck,
   HiXMark,
-  HiChevronDown,
-  HiChevronUp,
 } from "react-icons/hi2";
 
 const AVATAR_COLORS = [
@@ -29,14 +26,7 @@ export default function Settings() {
   // Local state initialized from mock user
   const [user, setUser] = useState(mockUser);
   const [name, setName] = useState(mockUser.name);
-  const [email, setEmail] = useState(mockUser.email);
   const [avatarColor, setAvatarColor] = useState(mockUser.avatarColor);
-
-  // Password change state
-  const [showPasswordSection, setShowPasswordSection] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Preferences state
   const [preferences, setPreferences] = useState({
@@ -53,7 +43,6 @@ export default function Settings() {
   // Simulated notification toast state
   const [toastMessage, setToastMessage] = useState(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [isSavingPrefs, setIsSavingPrefs] = useState(false);
 
   const showToast = (msg) => {
@@ -71,7 +60,6 @@ export default function Settings() {
       setUser((prev) => ({
         ...prev,
         name,
-        email,
         avatarColor,
         avatarInitials: name
           .split(" ")
@@ -82,32 +70,6 @@ export default function Settings() {
       }));
       showToast("Profile information updated successfully!");
     }, 600);
-  };
-
-  const handleSavePassword = (e) => {
-    e.preventDefault();
-    if (!currentPassword) {
-      showToast("Please enter your current password.");
-      return;
-    }
-    if (newPassword.length < 6) {
-      showToast("New password must be at least 6 characters.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      showToast("New passwords do not match.");
-      return;
-    }
-
-    setIsSavingPassword(true);
-    setTimeout(() => {
-      setIsSavingPassword(false);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setShowPasswordSection(false);
-      showToast("Password updated successfully!");
-    }, 700);
   };
 
   const handleSavePreferences = () => {
@@ -206,14 +168,17 @@ export default function Settings() {
                 placeholder="Your full name"
                 required
               />
-              <Input
-                label="Email Address"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@example.com"
-                required
-              />
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-brand block">
+                  Email Address
+                </label>
+                <div className="w-full px-3 py-2.5 rounded-xl border border-muted/30 bg-light/60 text-xs text-gray-500 font-medium select-all">
+                  {user.email}
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  Email cannot be changed here.
+                </p>
+              </div>
             </div>
 
             {/* Submit Button */}
@@ -231,75 +196,6 @@ export default function Settings() {
               </span>
             </div>
           </form>
-
-          {/* Separate Action: Change Password Drawer */}
-          <div className="pt-4 border-t border-muted/20 space-y-4">
-            <button
-              type="button"
-              onClick={() => setShowPasswordSection((prev) => !prev)}
-              className="flex items-center justify-between w-full py-2 text-left text-xs font-bold text-brand hover:text-darker transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <HiLockClosed className="w-4 h-4 text-gray-500" />
-                <span>Change Password</span>
-              </div>
-              {showPasswordSection ? (
-                <HiChevronUp className="w-4 h-4" />
-              ) : (
-                <HiChevronDown className="w-4 h-4" />
-              )}
-            </button>
-
-            {showPasswordSection && (
-              <form
-                onSubmit={handleSavePassword}
-                className="p-4 rounded-xl bg-light/50 border border-muted/30 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200"
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Input
-                    label="Current Password"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
-                  <Input
-                    label="New Password"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="At least 6 chars"
-                  />
-                  <Input
-                    label="Confirm Password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3 justify-end pt-1">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setShowPasswordSection(false)}
-                    className="py-2 px-4 text-xs"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    isLoading={isSavingPassword}
-                    className="py-2 px-4 text-xs"
-                  >
-                    Update Password
-                  </Button>
-                </div>
-              </form>
-            )}
-          </div>
         </section>
 
         {/* SECTION 2: PREFERENCES */}
