@@ -167,7 +167,7 @@ export default function ChatTab() {
       </div>
 
       {/* ── Fixed bottom dock — always visible, viewport-locked ───── */}
-      <div className="fixed bottom-0 left-0 right-0 lg:left-[270px] z-50">
+      <div className="fixed bottom-0 left-0 right-0 z-50">
         <div className="w-full max-w-7xl mx-auto lg:px-8">
           <div className="bg-white border border-muted/20 shadow-lg lg:rounded-t-2xl overflow-hidden">
             {/* Suggested prompts */}

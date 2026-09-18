@@ -102,10 +102,10 @@ export default function StudySpaceOverview() {
   const collapsedOpacity = collapseProgress;
 
   return (
-    <AppLayout hideBottomNav>
+    <AppLayout hideBottomNav hideSidebar>
       {/* ── Sticky Collapsed Header (fixed, above content) ──────────── */}
       <div
-        className="fixed top-0 left-0 right-0 lg:left-[270px] z-20 bg-white border-b border-muted/20 shadow-sm transition-transform duration-300 ease-out"
+        className="fixed top-0 left-0 right-0 z-20 bg-white border-b border-muted/20 shadow-sm transition-transform duration-300 ease-out"
         style={{
           opacity: collapsedOpacity,
           transform: `translateY(${isCollapsed ? "0%" : "-100%"})`,
