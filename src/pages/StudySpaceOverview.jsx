@@ -1,21 +1,23 @@
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import AppLayout from "../components/layout/AppLayout";
-import SpaceTabs, { getActiveTabComponent } from "../components/study-space/SpaceTabs";
+import SpaceTabs, {
+  getActiveTabComponent,
+} from "../components/study-space/SpaceTabs";
 import Button from "../components/ui/Button";
 import { getSpaceById } from "../data/mockActiveSpace";
-import { 
-  HiArrowLeft, 
-  HiOutlineDocumentText, 
-  HiOutlineClock, 
+import {
+  HiArrowLeft,
+  HiOutlineDocumentText,
+  HiOutlineClock,
   HiOutlineCalendar,
   HiOutlineShare,
-  HiOutlineSparkles
+  HiOutlineSparkles,
 } from "react-icons/hi2";
 
 export default function StudySpaceOverview() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  
+
   const space = getSpaceById(id);
   const activeTabId = searchParams.get("tab") || "summary";
   const ActiveTabComponent = getActiveTabComponent(activeTabId);
@@ -25,12 +27,10 @@ export default function StudySpaceOverview() {
   };
 
   return (
-    <AppLayout>
+    <AppLayout hideBottomNav>
       <div className="space-y-6 sm:space-y-8">
-        
         {/* Header Section */}
         <div className="space-y-4">
-          
           {/* Top row: Back link + Share Button */}
           <div className="flex items-center justify-between gap-4">
             <Link
@@ -84,17 +84,15 @@ export default function StudySpaceOverview() {
               {space.progressPercent}% Mastery
             </span>
           </div>
-
         </div>
 
         {/* Tab Navigation */}
         <SpaceTabs />
 
         {/* Dynamic Tab Content Area */}
-        <div className="min-h-[300px]">
+        <div className={activeTabId === "chat" ? "" : "min-h-[300px]"}>
           <ActiveTabComponent />
         </div>
-
       </div>
     </AppLayout>
   );
