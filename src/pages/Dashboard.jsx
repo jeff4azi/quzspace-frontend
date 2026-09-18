@@ -5,7 +5,7 @@ import StudySpaceCard from "../components/dashboard/StudySpaceCard";
 import EmptyState from "../components/dashboard/EmptyState";
 import Button from "../components/ui/Button";
 import { mockStudySpaces } from "../data/mockStudySpaces";
-import { HiPlus, HiSparkles } from "react-icons/hi2";
+import { HiPlus } from "react-icons/hi2";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -18,32 +18,6 @@ export default function Dashboard() {
   return (
     <AppLayout onCreateClick={handleCreateSpace}>
       <div className="space-y-6 sm:space-y-8">
-        
-        {/* Mobile Plan Usage Banner (lg:hidden, since desktop sidebar shows it) */}
-        <div className="lg:hidden bg-white p-4 rounded-xl border border-muted/30 shadow-xs space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-brand flex items-center gap-1">
-              <HiSparkles className="w-4 h-4 text-amber-500" /> Free Plan
-            </span>
-            <span className="text-gray font-semibold">2 of 3 Spaces Used</span>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="w-full bg-muted/20 h-2 rounded-full overflow-hidden">
-            <div className="bg-brand h-full rounded-full w-[66%]" />
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-gray">Need more space?</span>
-            <button
-              onClick={() => alert("Upgrade plan placeholder")}
-              className="text-xs font-bold text-brand hover:underline"
-            >
-              Upgrade Plan →
-            </button>
-          </div>
-        </div>
-
         {/* Dashboard Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -51,7 +25,8 @@ export default function Dashboard() {
               Your Study Spaces
             </h1>
             <p className="text-sm text-gray mt-1">
-              Manage your AI-generated summaries, active recall flashcards, and quizzes.
+              Manage your AI-generated summaries, active recall flashcards, and
+              quizzes.
             </p>
           </div>
 
@@ -88,7 +63,6 @@ export default function Dashboard() {
         ) : (
           <EmptyState onCreateClick={handleCreateSpace} />
         )}
-
       </div>
     </AppLayout>
   );

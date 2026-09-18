@@ -4,20 +4,14 @@ import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import Toggle from "../components/ui/Toggle";
 import { mockUser } from "../data/mockUser";
-import { usePlan } from "../context/PlanContext";
 import {
   HiUser,
-  HiSparkles,
   HiAdjustmentsHorizontal,
   HiExclamationTriangle,
   HiCheckCircle,
   HiLockClosed,
-  HiCreditCard,
-  HiArrowPath,
   HiCheck,
   HiXMark,
-  HiOutlineShieldCheck,
-  HiArrowRightOnRectangle,
   HiChevronDown,
   HiChevronUp,
 } from "react-icons/hi2";
@@ -32,7 +26,6 @@ const AVATAR_COLORS = [
 ];
 
 export default function Settings() {
-  const { userPlan: planState, setUserPlan: setPlanState } = usePlan();
   // Local state initialized from mock user
   const [user, setUser] = useState(mockUser);
   const [name, setName] = useState(mockUser.name);
@@ -125,26 +118,17 @@ export default function Settings() {
     }, 500);
   };
 
-  const handleUpgradeClick = () => {
-    setPlanState("premium");
-    showToast("🎉 Simulated Upgrade Success! You are now on Premium Pro.");
-  };
-
-  const handleDowngradeClick = () => {
-    setPlanState("free");
-    showToast("Plan switched back to Free Tier.");
-  };
-
   const handleDeleteAccount = () => {
     setShowDeleteModal(false);
     setDeleteConfirmText("");
-    showToast("⚠️ Account deletion simulated. In a real app, your data would be removed.");
+    showToast(
+      "⚠️ Account deletion simulated. In a real app, your data would be removed.",
+    );
   };
 
   return (
     <AppLayout>
       <div className="space-y-8 max-w-4xl pb-20 lg:pb-0">
-        
         {/* Toast Notification Banner */}
         {toastMessage && (
           <div className="fixed bottom-24 lg:bottom-6 right-6 z-50 bg-brand text-light px-4 py-3 rounded-2xl shadow-xl border border-muted/30 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-3 duration-200">
@@ -165,7 +149,7 @@ export default function Settings() {
             Settings
           </h1>
           <p className="text-sm text-gray mt-1">
-            Manage your profile details, subscription plan, and study preferences.
+            Manage your profile details and study preferences.
           </p>
         </div>
 
@@ -173,7 +157,9 @@ export default function Settings() {
         <section className="bg-white p-5 sm:p-6 rounded-2xl border border-muted/30 shadow-xs space-y-6">
           <div className="flex items-center gap-2 border-b border-muted/20 pb-4">
             <HiUser className="w-5 h-5 text-brand" />
-            <h2 className="text-lg font-bold text-brand">Profile Information</h2>
+            <h2 className="text-lg font-bold text-brand">
+              Profile Information
+            </h2>
           </div>
 
           <form onSubmit={handleSaveProfile} className="space-y-6">
@@ -316,217 +302,7 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* SECTION 2: PLAN & BILLING */}
-        <section className="bg-white p-5 sm:p-6 rounded-2xl border border-muted/30 shadow-xs space-y-6">
-          <div className="flex items-center justify-between border-b border-muted/20 pb-4">
-            <div className="flex items-center gap-2">
-              <HiSparkles className="w-5 h-5 text-amber-500" />
-              <h2 className="text-lg font-bold text-brand">Plan & Subscription</h2>
-            </div>
-
-            {/* Quick Toggle to test both Free & Premium states */}
-            <div className="flex items-center gap-2 text-xs bg-light p-1 rounded-xl border border-muted/30">
-              <span className="text-gray-500 font-semibold px-2">Demo View:</span>
-              <button
-                type="button"
-                onClick={() => setPlanState("free")}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
-                  planState === "free"
-                    ? "bg-white text-brand shadow-xs"
-                    : "text-gray-500 hover:text-brand"
-                }`}
-              >
-                Free
-              </button>
-              <button
-                type="button"
-                onClick={() => setPlanState("premium")}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
-                  planState === "premium"
-                    ? "bg-brand text-light shadow-xs"
-                    : "text-gray-500 hover:text-brand"
-                }`}
-              >
-                Premium
-              </button>
-            </div>
-          </div>
-
-          {/* Current Plan Usage Status Card */}
-          <div className="p-5 rounded-2xl bg-light/60 border border-muted/30 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-extrabold text-brand">
-                    {planState === "free" ? "Free Tier Plan" : "Premium Pro Plan"}
-                  </span>
-                  <span
-                    className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
-                      planState === "free"
-                        ? "bg-blue-100 text-blue-800 border-blue-200"
-                        : "bg-emerald-100 text-emerald-800 border-emerald-200"
-                    }`}
-                  >
-                    {planState === "free" ? "Active Free" : "Active Subscription"}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {planState === "free"
-                    ? "Standard access to Study Spaces, flashcards, and AI quizzes."
-                    : "Unlimited AI generation, unlimited spaces, and priority support."}
-                </p>
-              </div>
-
-              {planState === "premium" && (
-                <div className="text-right">
-                  <span className="text-xs font-bold text-brand block">$9.99 / month</span>
-                  <span className="text-[11px] text-gray-500">Renews Oct 15, 2026</span>
-                </div>
-              )}
-            </div>
-
-            {/* Usage Progress Bars */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-muted/20">
-              {/* Study Spaces Progress */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="text-gray-600">Study Spaces Used</span>
-                  <span className="text-brand">
-                    {planState === "free" ? `${user.studySpacesUsed} / ${user.studySpacesLimit}` : `${user.studySpacesUsed} / Unlimited`}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
-                  <div
-                    className="bg-brand h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: planState === "free" ? `${(user.studySpacesUsed / user.studySpacesLimit) * 100}%` : "30%",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Shared Spaces Progress */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="text-gray-600">Shared Links Used</span>
-                  <span className="text-brand">
-                    {planState === "free" ? `${user.sharedSpacesUsed} / ${user.sharedSpacesLimit}` : `${user.sharedSpacesUsed} / Unlimited`}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
-                  <div
-                    className="bg-amber-500 h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: planState === "free" ? `${(user.sharedSpacesUsed / user.sharedSpacesLimit) * 100}%` : "20%",
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Conditional Content depending on Plan State */}
-          {planState === "free" ? (
-            /* Upgrade Comparison Callout */
-            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-brand/5 via-white to-amber-500/5 border border-brand/20 space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <HiSparkles className="w-5 h-5 text-amber-500" />
-                    <h3 className="text-base font-extrabold text-brand">
-                      Unlock Unlimited Potential with Premium Pro
-                    </h3>
-                  </div>
-                  <p className="text-xs text-gray-600 mt-1 max-w-xl">
-                    Get unlimited study spaces, faster AI generation, full collaborator sharing, and weak area mastery breakdown.
-                  </p>
-                </div>
-
-                <Button
-                  variant="primary"
-                  onClick={handleUpgradeClick}
-                  className="shrink-0 py-3 px-6 text-xs shadow-md"
-                >
-                  <HiSparkles className="w-4 h-4 text-amber-300" />
-                  <span>Upgrade to Premium ($9.99/mo)</span>
-                </Button>
-              </div>
-
-              {/* Feature Comparison List */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
-                <div className="space-y-2 p-3.5 rounded-xl bg-white/80 border border-muted/30">
-                  <span className="font-extrabold text-gray-500 block uppercase tracking-wider text-[10px]">
-                    Free Plan Features
-                  </span>
-                  <ul className="space-y-1.5 text-gray-600">
-                    <li className="flex items-center gap-2">
-                      <HiCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Up to 3 Study Spaces</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <HiCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Standard AI Summaries & Flashcards</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <HiCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Community overall leaderboards</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="space-y-2 p-3.5 rounded-xl bg-brand/5 border border-brand/30">
-                  <span className="font-extrabold text-brand block uppercase tracking-wider text-[10px]">
-                    ★ Premium Pro Highlights
-                  </span>
-                  <ul className="space-y-1.5 text-brand font-medium">
-                    <li className="flex items-center gap-2">
-                      <HiCheck className="w-4 h-4 text-brand shrink-0" />
-                      <span><strong>Unlimited</strong> Study Spaces & Files</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <HiCheck className="w-4 h-4 text-brand shrink-0" />
-                      <span>Priority AI generation & explanations</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <HiCheck className="w-4 h-4 text-brand shrink-0" />
-                      <span>Unlimited Shared Space invites</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Premium Subscription Actions */
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-light/40 border border-muted/20">
-              <div className="flex items-center gap-3">
-                <HiCreditCard className="w-6 h-6 text-brand" />
-                <div className="text-xs">
-                  <span className="font-bold text-brand block">Visa ending in 4242</span>
-                  <span className="text-gray-500">Next billing date: October 15, 2026</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <Button
-                  variant="secondary"
-                  onClick={() => showToast("Manage Billing portal modal simulated.")}
-                  className="py-2 px-4 text-xs w-full sm:w-auto"
-                >
-                  Manage Billing
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={handleDowngradeClick}
-                  className="py-2 px-4 text-xs text-rose-600 hover:bg-rose-50 border-rose-200 w-full sm:w-auto"
-                >
-                  Cancel Subscription
-                </Button>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* SECTION 3: PREFERENCES */}
+        {/* SECTION 2: PREFERENCES */}
         <section className="bg-white p-5 sm:p-6 rounded-2xl border border-muted/30 shadow-xs space-y-6">
           <div className="flex items-center gap-2 border-b border-muted/20 pb-4">
             <HiAdjustmentsHorizontal className="w-5 h-5 text-brand" />
@@ -599,9 +375,12 @@ export default function Settings() {
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-sm font-bold text-rose-900">Delete Account</h3>
+              <h3 className="text-sm font-bold text-rose-900">
+                Delete Account
+              </h3>
               <p className="text-xs text-rose-700/80 mt-0.5 max-w-lg leading-relaxed">
-                Permanently remove your account, study spaces, flashcard decks, and quiz attempt records. This action cannot be undone.
+                Permanently remove your account, study spaces, flashcard decks,
+                and quiz attempt records. This action cannot be undone.
               </p>
             </div>
 
@@ -624,13 +403,20 @@ export default function Settings() {
                   <HiExclamationTriangle className="w-6 h-6 text-rose-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-brand">Confirm Account Deletion</h3>
-                  <p className="text-xs text-gray-500">This action is permanent and irreversible.</p>
+                  <h3 className="text-lg font-bold text-brand">
+                    Confirm Account Deletion
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    This action is permanent and irreversible.
+                  </p>
                 </div>
               </div>
 
               <p className="text-xs text-gray-600 leading-relaxed bg-rose-50/50 p-3 rounded-xl border border-rose-100">
-                Are you sure you want to delete your account? All your study spaces (<strong>{user.studySpacesUsed} spaces</strong>), AI summaries, flashcard mastery records, and quiz history will be erased immediately.
+                Are you sure you want to delete your account? All your study
+                spaces (<strong>{user.studySpacesUsed} spaces</strong>), AI
+                summaries, flashcard mastery records, and quiz history will be
+                erased immediately.
               </p>
 
               <div className="space-y-1.5">
@@ -670,7 +456,6 @@ export default function Settings() {
             </div>
           </div>
         )}
-
       </div>
     </AppLayout>
   );

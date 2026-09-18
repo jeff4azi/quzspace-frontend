@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "../../assets/Quzspace_logo.png";
-import Button from "../ui/Button";
-import { 
-  HiOutlineSquare2Stack, 
-  HiOutlineBookOpen, 
+import {
+  HiOutlineSquare2Stack,
+  HiOutlineBookOpen,
   HiOutlineCog6Tooth,
   HiOutlineEllipsisVertical,
   HiOutlineArrowRightOnRectangle,
-  HiSparkles
 } from "react-icons/hi2";
 
 export default function Sidebar() {
@@ -17,7 +15,12 @@ export default function Sidebar() {
 
   const navItems = [
     { label: "Dashboard", to: "/dashboard", icon: HiOutlineSquare2Stack },
-    { label: "Study Spaces", to: "/spaces", icon: HiOutlineBookOpen, count: "6" },
+    {
+      label: "Study Spaces",
+      to: "/spaces",
+      icon: HiOutlineBookOpen,
+      count: "6",
+    },
     { label: "Settings", to: "/settings", icon: HiOutlineCog6Tooth },
   ];
 
@@ -30,13 +33,13 @@ export default function Sidebar() {
     <aside className="fixed top-0 left-0 h-screen w-[270px] bg-white border-r border-muted/20 z-40 hidden lg:flex flex-col justify-between p-5 text-gray font-sans select-none">
       {/* Top Header & Brand */}
       <div className="space-y-6">
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="flex items-center gap-2.5 px-2 py-1 hover:opacity-90 transition-opacity"
         >
-          <img 
-            src={logo} 
-            alt="QuzSpace Logo" 
+          <img
+            src={logo}
+            alt="QuzSpace Logo"
             className="h-9 w-auto object-contain"
           />
           <span className="text-xl font-extrabold tracking-tight text-brand">
@@ -68,7 +71,9 @@ export default function Sidebar() {
                   <div className="flex items-center gap-3">
                     <item.icon
                       className={`w-5 h-5 transition-colors ${
-                        isActive ? "text-light" : "text-gray-400 group-hover:text-brand"
+                        isActive
+                          ? "text-light"
+                          : "text-gray-400 group-hover:text-brand"
                       }`}
                     />
                     <span>{item.label}</span>
@@ -91,33 +96,8 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Bottom Section: Plan usage card + User Profile Row */}
+      {/* Bottom Section: User Profile Row */}
       <div className="space-y-4 pt-4 border-t border-muted/20">
-        
-        {/* Plan Usage Indicator Card */}
-        <div className="bg-light/60 p-3.5 rounded-2xl border border-muted/30 space-y-2.5">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-brand flex items-center gap-1.5">
-              <HiSparkles className="w-3.5 h-3.5 text-amber-500" /> Free Plan
-            </span>
-            <span className="text-gray-500 font-semibold text-[11px]">2 / 3 Spaces</span>
-          </div>
-
-          {/* Slim progress bar */}
-          <div className="w-full bg-muted/30 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-brand h-full rounded-full w-[66%]" />
-          </div>
-
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => navigate("/settings")}
-            className="py-1.5 text-xs font-bold border-muted/40 hover:bg-white"
-          >
-            Upgrade Plan
-          </Button>
-        </div>
-
         {/* User Account Row with Dropdown */}
         <div className="relative">
           <div className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/80 transition-colors">
@@ -126,8 +106,12 @@ export default function Sidebar() {
                 JA
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-brand truncate">Jeffrey A.</p>
-                <p className="text-[11px] text-gray-500 truncate">jeffrey@quzspace.io</p>
+                <p className="text-xs font-bold text-brand truncate">
+                  Jeffrey A.
+                </p>
+                <p className="text-[11px] text-gray-500 truncate">
+                  jeffrey@quzspace.io
+                </p>
               </div>
             </div>
 
@@ -161,7 +145,6 @@ export default function Sidebar() {
             </div>
           )}
         </div>
-
       </div>
     </aside>
   );
