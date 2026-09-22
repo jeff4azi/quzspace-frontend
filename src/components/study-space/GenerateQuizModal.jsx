@@ -41,14 +41,19 @@ export default function GenerateQuizModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-xs animate-in fade-in"
+      style={{ minHeight: "100dvh" }}
+      onClick={onClose}
+    >
       {/* Modal Container */}
       <div
-        className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl border border-muted/30 shadow-2xl p-6 space-y-6 animate-in slide-in-from-bottom-6 sm:zoom-in-95 max-h-[90vh] overflow-y-auto"
+        className="w-full sm:max-w-md sm:rounded-2xl bg-white rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 max-h-[90dvh] overflow-y-auto"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-muted/20">
+        <div className="flex items-center justify-between px-6 pt-6 pb-3 border-b border-muted/20">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
               <HiOutlineQuestionMarkCircle className="w-5 h-5" />
@@ -74,7 +79,7 @@ export default function GenerateQuizModal({
         </div>
 
         {/* Configuration Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 px-6 pb-6">
           {/* Question Count Selector */}
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-brand block">
@@ -128,23 +133,23 @@ export default function GenerateQuizModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onClose}
-              className="w-full sm:w-1/3 py-3 text-xs font-bold"
-            >
-              Cancel
-            </Button>
+          <div className="pt-2 flex flex-col sm:flex-row-reverse items-center gap-3">
             <Button
               type="submit"
               variant="primary"
               isLoading={isGenerating}
-              className="w-full sm:w-2/3 py-3 text-xs font-bold"
+              className="w-full sm:flex-1 py-3 text-xs font-bold"
             >
               <HiSparkles className="w-4 h-4 text-amber-300" />
               <span>Generate Quiz</span>
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              className="w-full sm:w-auto sm:px-6 py-3 text-xs font-bold"
+            >
+              Cancel
             </Button>
           </div>
         </form>
