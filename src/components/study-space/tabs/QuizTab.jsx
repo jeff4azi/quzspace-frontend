@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import QuizCard from "../QuizCard";
 import GenerateQuizModal from "../GenerateQuizModal";
 import QuizEmptyState from "./QuizEmptyState";
@@ -7,6 +8,7 @@ import { mockQuizzes } from "../../../data/mockQuizzes";
 import { HiPlus } from "react-icons/hi2";
 
 export default function QuizTab({ isReadOnly = false }) {
+  const { id: spaceId } = useParams();
   const [quizzes, setQuizzes] = useState(mockQuizzes);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -62,6 +64,7 @@ export default function QuizTab({ isReadOnly = false }) {
             <QuizCard
               key={quiz.id}
               quiz={quiz}
+              spaceId={spaceId}
               onDelete={handleDeleteQuiz}
               onRetake={handleRetakeQuiz}
             />

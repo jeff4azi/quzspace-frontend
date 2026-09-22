@@ -7,6 +7,7 @@ import CreateStudySpace from "./pages/CreateStudySpace";
 import StudySpaceOverview from "./pages/StudySpaceOverview";
 import QuizTaking from "./pages/QuizTaking";
 import QuizResults from "./pages/QuizResults";
+import QuizHistory from "./pages/QuizHistory";
 import SharedSpace from "./pages/SharedSpace";
 import Settings from "./pages/Settings";
 
@@ -25,6 +26,10 @@ function App() {
           <Route
             path="/spaces/:id/quiz/:quizId/results"
             element={<QuizResults />}
+          />
+          <Route
+            path="/spaces/:id/quiz/:quizId/history"
+            element={<QuizHistory />}
           />
           <Route path="/s/:shareCode" element={<SharedSpace />} />
           <Route path="/create-space" element={<CreateStudySpace />} />

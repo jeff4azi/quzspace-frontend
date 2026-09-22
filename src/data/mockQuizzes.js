@@ -1,3 +1,73 @@
+// Mock attempt history per quiz — keyed by quiz ID
+export const mockQuizAttempts = {
+  "q-101": [
+    {
+      id: "a-101-2",
+      attemptNumber: 2,
+      score: 85,
+      totalQuestions: 20,
+      percent: 85,
+      completedAt: "2 hours ago",
+      timeTaken: "8m 12s",
+      isPB: true,
+    },
+    {
+      id: "a-101-1",
+      attemptNumber: 1,
+      score: 14,
+      totalQuestions: 20,
+      percent: 70,
+      completedAt: "Yesterday",
+      timeTaken: "11m 34s",
+      isPB: false,
+    },
+  ],
+  "q-102": [
+    {
+      id: "a-102-3",
+      attemptNumber: 3,
+      score: 9,
+      totalQuestions: 10,
+      percent: 90,
+      completedAt: "Yesterday",
+      timeTaken: "4m 50s",
+      isPB: true,
+    },
+    {
+      id: "a-102-2",
+      attemptNumber: 2,
+      score: 8,
+      totalQuestions: 10,
+      percent: 80,
+      completedAt: "3 days ago",
+      timeTaken: "5m 20s",
+      isPB: false,
+    },
+    {
+      id: "a-102-1",
+      attemptNumber: 1,
+      score: 6,
+      totalQuestions: 10,
+      percent: 60,
+      completedAt: "5 days ago",
+      timeTaken: "6m 45s",
+      isPB: false,
+    },
+  ],
+  "q-104": [
+    {
+      id: "a-104-1",
+      attemptNumber: 1,
+      score: 14,
+      totalQuestions: 20,
+      percent: 70,
+      completedAt: "Aug 05, 2026",
+      timeTaken: "9m 03s",
+      isPB: true,
+    },
+  ],
+};
+
 export const mockQuizzes = [
   {
     id: "q-101",

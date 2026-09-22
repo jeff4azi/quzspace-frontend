@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { 
-  HiOutlineQuestionMarkCircle, 
-  HiOutlineClock, 
+import {
+  HiOutlineQuestionMarkCircle,
+  HiOutlineClock,
   HiOutlineEllipsisHorizontal,
   HiOutlinePlay,
   HiOutlineArrowPath,
   HiOutlineChartBar,
   HiOutlineTrash,
   HiCheckCircle,
-  HiOutlineSparkles
+  HiOutlineSparkles,
 } from "react-icons/hi2";
 import QuizLeaderboardPreview from "./QuizLeaderboardPreview";
 
@@ -27,7 +27,12 @@ function getDifficultyBadge(difficulty) {
   }
 }
 
-export default function QuizCard({ quiz, onDelete, onRetake }) {
+export default function QuizCard({
+  quiz,
+  spaceId = "cs-301",
+  onDelete,
+  onRetake,
+}) {
   const [showDropdown, setShowDropdown] = useState(false);
   const badgeStyle = getDifficultyBadge(quiz.difficulty);
 
@@ -44,12 +49,13 @@ export default function QuizCard({ quiz, onDelete, onRetake }) {
 
   return (
     <div className="relative group bg-white p-5 sm:p-6 rounded-2xl border border-muted/30 shadow-xs hover:border-brand/40 hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full space-y-4">
-      
       <div className="space-y-3">
         {/* Top Row: Difficulty Badge & Overflow Menu */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${badgeStyle}`}>
+            <span
+              className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${badgeStyle}`}
+            >
               {quiz.difficulty}
             </span>
             <span className="text-xs font-semibold text-gray-500">
@@ -76,7 +82,7 @@ export default function QuizCard({ quiz, onDelete, onRetake }) {
             {showDropdown && (
               <div className="absolute right-0 top-8 w-44 bg-white rounded-xl shadow-xl border border-muted/30 p-1.5 z-50 animate-in fade-in">
                 <Link
-                  to={`/spaces/cs-301/quiz/${quiz.id}`}
+                  to={`/spaces/${spaceId}/quiz/${quiz.id}`}
                   onClick={() => setShowDropdown(false)}
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
                 >
@@ -85,7 +91,7 @@ export default function QuizCard({ quiz, onDelete, onRetake }) {
                 </Link>
                 {quiz.bestScore !== null && (
                   <Link
-                    to={`/spaces/cs-301/quiz/${quiz.id}/results`}
+                    to={`/spaces/${spaceId}/quiz/${quiz.id}/history`}
                     onClick={() => setShowDropdown(false)}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
                   >
@@ -117,7 +123,10 @@ export default function QuizCard({ quiz, onDelete, onRetake }) {
             {quiz.createdAt}
           </span>
           {quiz.attemptsCount > 0 && (
-            <span>• {quiz.attemptsCount} {quiz.attemptsCount === 1 ? "attempt" : "attempts"}</span>
+            <span>
+              • {quiz.attemptsCount}{" "}
+              {quiz.attemptsCount === 1 ? "attempt" : "attempts"}
+            </span>
           )}
         </div>
 
@@ -127,15 +136,17 @@ export default function QuizCard({ quiz, onDelete, onRetake }) {
 
       {/* Score Section & Action CTA */}
       <div className="pt-4 border-t border-muted/20 space-y-3">
-        
         {/* Score Progress Bar OR Unattempted State */}
         {quiz.bestScore !== null ? (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs font-semibold">
               <span className="text-gray-500 flex items-center gap-1">
-                <HiOutlineSparkles className="w-3.5 h-3.5 text-amber-500" /> Best Score
+                <HiOutlineSparkles className="w-3.5 h-3.5 text-amber-500" />{" "}
+                Best Score
               </span>
-              <span className="text-emerald-700 font-extrabold">{quiz.bestScore}%</span>
+              <span className="text-emerald-700 font-extrabold">
+                {quiz.bestScore}%
+              </span>
             </div>
             <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
               <div
@@ -153,15 +164,13 @@ export default function QuizCard({ quiz, onDelete, onRetake }) {
 
         {/* Take Quiz Button */}
         <Link
-          to={`/spaces/cs-301/quiz/${quiz.id}`}
+          to={`/spaces/${spaceId}/quiz/${quiz.id}`}
           className="w-full inline-flex items-center justify-center gap-2 bg-brand text-light py-2.5 px-4 rounded-xl text-xs font-bold shadow-xs hover:bg-darker transition-all cursor-pointer"
         >
           <HiOutlinePlay className="w-4 h-4" />
           <span>{quiz.bestScore !== null ? "Retake Quiz" : "Take Quiz"}</span>
         </Link>
-
       </div>
-
     </div>
   );
 }
