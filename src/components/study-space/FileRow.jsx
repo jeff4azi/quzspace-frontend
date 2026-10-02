@@ -45,6 +45,56 @@ export default function FileRow({ file, onDelete, onDownload, onRename }) {
     }
   };
 
+  const status = (file.status || "processed").toLowerCase();
+  const statusPill = (() => {
+    switch (status) {
+      case "processed":
+      case "ready":
+        return {
+          bg: "bg-emerald-50",
+          text: "text-emerald-700",
+          border: "border-emerald-200",
+          icon: <HiCheckCircle className="w-3.5 h-3.5 text-emerald-600" />,
+          label: "Processed",
+        };
+      case "uploading":
+      case "pending":
+        return {
+          bg: "bg-amber-50",
+          text: "text-amber-700",
+          border: "border-amber-200",
+          icon: <HiOutlineArrowDownTray className="w-3.5 h-3.5 text-amber-600 animate-pulse" />,
+          label: "Uploading",
+        };
+      case "processing":
+      case "extracting":
+        return {
+          bg: "bg-blue-50",
+          text: "text-blue-700",
+          border: "border-blue-200",
+          icon: <HiOutlineDocumentCheck className="w-3.5 h-3.5 text-blue-600 animate-pulse" />,
+          label: "Processing",
+        };
+      case "failed":
+      case "error":
+        return {
+          bg: "bg-rose-50",
+          text: "text-rose-700",
+          border: "border-rose-200",
+          icon: <HiOutlineEllipsisHorizontal className="w-3.5 h-3.5 text-rose-600" />,
+          label: "Failed",
+        };
+      default:
+        return {
+          bg: "bg-gray-50",
+          text: "text-gray-600",
+          border: "border-gray-200",
+          icon: <HiCheckCircle className="w-3.5 h-3.5 text-gray-500" />,
+          label: status,
+        };
+    }
+  })();
+
   return (
     <div className="group bg-white p-4 rounded-xl border border-muted/30 shadow-xs hover:border-brand/40 hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       
@@ -72,9 +122,9 @@ export default function FileRow({ file, onDelete, onDownload, onRename }) {
       <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-muted/20">
         
         {/* Status Pill */}
-        <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <HiCheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Processed</span>
+        <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border ${statusPill.bg} ${statusPill.text} ${statusPill.border}`}>
+          {statusPill.icon}
+          <span>{statusPill.label}</span>
         </span>
 
         {/* Overflow "•••" Dropdown Menu */}

@@ -1,178 +1,185 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
-import { HiOutlineEye, HiOutlineEyeSlash } from "react-icons/hi2";
 import { FcGoogle } from "react-icons/fc";
+import { HiEye, HiEyeSlash } from "react-icons/hi2";
+import { signInWithPassword, googleOAuthSignIn } from "../lib/supabaseClient";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const location = useLocation();
+  const redirectTo = location.state?.from || "/dashboard";
 
-  const [errors, setErrors] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [email, setEmail] = useState(location.state?.email || "");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showExpiredBanner, setShowExpiredBanner] = useState(
+    new URLSearchParams(location.search).get("expired") === "1",
+  );
 
-  // Email format regex check
-  const validateEmail = (email) => {
-    if (!email) return "Email address is required";
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return "Please enter a valid email address";
+  const validateEmail = (value) => {
+    if (!value) return "Email address is required";
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(value) ? "" : "Please enter a valid email address";
+  };
+
+  const validatePassword = (value) => {
+    if (!value) return "Password is required";
     return "";
   };
 
-  const validatePassword = (password) => {
-    if (!password) return "Password is required";
-    return "";
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
-    // Clear error on change if fixed
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    if (name === "email") {
-      setErrors((prev) => ({ ...prev, email: validateEmail(value) }));
-    } else if (name === "password") {
-      setErrors((prev) => ({ ...prev, password: validatePassword(value) }));
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const emailErr = validateEmail(formData.email);
-    const passErr = validatePassword(formData.password);
-
-    if (emailErr || passErr) {
-      setErrors({ email: emailErr, password: passErr });
+    const emailErr = validateEmail(email.trim());
+    const passwordErr = validatePassword(password);
+    if (emailErr) {
+      setError(emailErr);
       return;
     }
-
+    if (passwordErr) {
+      setError(passwordErr);
+      return;
+    }
+    setError("");
     setIsLoading(true);
-
-    // Simulate login request
-    setTimeout(() => {
+    try {
+      await signInWithPassword({ email: email.trim(), password });
+      navigate(redirectTo, { replace: true });
+    } catch (err) {
+      const msg = err?.message || "Couldn't sign in. Try again.";
+      setError(
+        /invalid.*credentials|email.*or.*password|invalid.*password/i.test(msg)
+          ? "Incorrect email or password. Check your details and try again."
+          : msg,
+      );
+    } finally {
       setIsLoading(false);
-      navigate("/dashboard");
-    }, 1200);
+    }
+  };
+
+  const handleGoogle = async () => {
+    try {
+      await googleOAuthSignIn();
+    } catch (err) {
+      setError(err?.message || "Google sign-in failed.");
+    }
   };
 
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Log in to access your personalized AI study workspace."
+      subtitle="Sign in with your email and password to continue studying."
       footerText="Don't have an account?"
       footerLinkText="Sign up"
       footerLinkTo="/signup"
     >
       <div className="space-y-5">
-        {/* Decorative Google Auth Button */}
-        <Button
-          variant="google"
-          fullWidth
-          onClick={() => alert("Google Sign-In is decorative for preview.")}
-        >
+        {showExpiredBanner && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs font-semibold text-amber-800 flex items-center gap-2">
+            <span>Session expired.</span>
+            <button
+              type="button"
+              className="ml-auto text-amber-700 hover:text-amber-900 underline"
+              onClick={() => setShowExpiredBanner(false)}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        <Button variant="google" fullWidth onClick={handleGoogle}>
           <FcGoogle className="w-5 h-5" />
           <span>Continue with Google</span>
         </Button>
 
-        {/* Divider */}
         <div className="relative flex items-center justify-center my-4">
           <div className="border-t border-muted/30 w-full" />
           <span className="bg-white px-3 text-xs uppercase tracking-wider text-muted font-bold absolute">
-            or
+            or use email
           </span>
         </div>
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          {/* Email Input */}
           <Input
             label="Email Address"
             type="email"
             name="email"
-            value={formData.email}
-            onChange={handleChange}
-            onBlur={handleBlur}
+            autoComplete="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (error) setError("");
+              if (showExpiredBanner) setShowExpiredBanner(false);
+            }}
             placeholder="you@example.com"
-            error={errors.email}
+            error={error}
             required
           />
 
-          {/* Password Input with Forgot Password link */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="password"
-                className="text-xs font-bold uppercase tracking-wider text-brand"
-              >
-                Password <span className="text-rose-500">*</span>
-              </label>
-              <Link
-                to="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert("Password reset functionality placeholder.");
-                }}
-                className="text-xs font-semibold text-gray hover:text-brand transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
+          <div className="relative">
             <Input
-              id="password"
+              label="Password"
               type={showPassword ? "text" : "password"}
               name="password"
-              value={formData.password}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="••••••••"
-              error={errors.password}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError("");
+              }}
+              placeholder="Enter your password"
               required
-              rightElement={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="p-1 text-gray hover:text-brand transition-colors focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <HiOutlineEyeSlash className="w-5 h-5" />
-                  ) : (
-                    <HiOutlineEye className="w-5 h-5" />
-                  )}
-                </button>
-              }
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-[42px] text-muted hover:text-gray transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <HiEyeSlash className="w-5 h-5" />
+              ) : (
+                <HiEye className="w-5 h-5" />
+              )}
+            </button>
           </div>
 
-          {/* Submit Button */}
+          <div className="flex justify-end -mt-1">
+            <Link
+              to="/signup"
+              className="text-[11px] font-semibold text-muted/80 hover:text-brand transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
           <Button
             type="submit"
             variant="primary"
             fullWidth
             isLoading={isLoading}
-            className="mt-2 py-3.5"
+            className="mt-1 py-3.5"
           >
-            Log In
+            Sign In
           </Button>
         </form>
+
+        <p className="text-[11px] leading-relaxed text-gray/80 text-center pt-1">
+          By continuing you agree to QuzSpace's{" "}
+          <Link to="#" className="text-brand font-semibold hover:underline">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link to="#" className="text-brand font-semibold hover:underline">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
     </AuthLayout>
   );

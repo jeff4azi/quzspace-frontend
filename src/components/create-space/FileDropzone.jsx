@@ -30,6 +30,7 @@ export default function FileDropzone({ onFilesSelected, errorMessage, setErrorMe
           type: file.type,
           progress: 0,
           isComplete: false,
+          rawFile: file,
         });
       } else {
         invalidFiles.push(file.name);

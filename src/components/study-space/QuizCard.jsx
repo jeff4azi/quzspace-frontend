@@ -11,6 +11,7 @@ import {
   HiCheckCircle,
   HiOutlineSparkles,
 } from "react-icons/hi2";
+import { CgSpinner } from "react-icons/cg";
 import QuizLeaderboardPreview from "./QuizLeaderboardPreview";
 
 function getDifficultyBadge(difficulty) {
@@ -32,6 +33,7 @@ export default function QuizCard({
   spaceId = "cs-301",
   onDelete,
   onRetake,
+  isDeleting = false,
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const badgeStyle = getDifficultyBadge(quiz.difficulty);
@@ -48,7 +50,12 @@ export default function QuizCard({
   };
 
   return (
-    <div className="relative group bg-white p-5 sm:p-6 rounded-2xl border border-muted/30 shadow-xs hover:border-brand/40 hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full space-y-4">
+    <div className={`relative group bg-white p-5 sm:p-6 rounded-2xl border border-muted/30 shadow-xs hover:border-brand/40 hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full space-y-4 ${isDeleting ? "opacity-60 pointer-events-none" : ""}`}>
+      {isDeleting && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/40 backdrop-blur-[2px]">
+          <CgSpinner className="w-8 h-8 text-brand animate-spin" />
+        </div>
+      )}
       <div className="space-y-3">
         {/* Top Row: Difficulty Badge & Overflow Menu */}
         <div className="flex items-center justify-between">

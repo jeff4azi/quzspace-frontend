@@ -1,4 +1,5 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import {
   HiArrowLeft,
   HiOutlineCheckCircle,
@@ -7,28 +8,195 @@ import {
   HiOutlineArrowPath,
   HiOutlineQuestionMarkCircle,
   HiTrophy,
-  HiSparkles,
   HiChevronRight,
+  HiExclamationTriangle,
 } from "react-icons/hi2";
-import { mockQuizzes, mockQuizAttempts } from "../data/mockQuizzes";
-import { getQuizDetailsById } from "../data/mockQuizQuestions";
+import ErrorBanner from "../components/shared/ErrorBanner";
+import api from "../lib/api";
+import { CgSpinner } from "react-icons/cg";
+
+function normalizeAttempt(a = {}, idx = 0) {
+  const score =
+    typeof a.score === "number"
+      ? a.score
+      : typeof a.correct === "number"
+      ? a.correct
+      : 0;
+  const total =
+    typeof a.total_questions === "number"
+      ? a.total_questions
+      : typeof a.total === "number"
+      ? a.total
+      : 0;
+  const percent =
+    typeof a.percent === "number"
+      ? Math.round(a.percent)
+      : typeof a.score_percent === "number"
+      ? Math.round(a.score_percent)
+      : total > 0
+      ? Math.round((score / total) * 100)
+      : 0;
+  const completedAt = a.completed_at || a.created_at || a.submitted_at;
+  return {
+    id: a.id || a.attempt_id || `attempt-${idx}`,
+    attemptNumber:
+      typeof a.attempt_number === "number"
+        ? a.attempt_number
+        : typeof a.attemptNumber === "number"
+        ? a.attemptNumber
+        : idx + 1,
+    isPB: !!a.is_pb || !!a.isPersonalBest,
+    completedAt: completedAt
+      ? (() => {
+          try {
+            return new Date(completedAt).toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+          } catch {
+            return "Recently";
+          }
+        })()
+      : "Recently",
+    percent,
+    score,
+    totalQuestions: total,
+    timeTaken:
+      typeof a.time_taken === "string"
+        ? a.time_taken
+        : typeof a.timeTakenMs === "number"
+        ? (() => {
+            const m = Math.max(1, Math.round(a.timeTakenMs / 60000));
+            const s = Math.round((a.timeTakenMs % 60000) / 1000);
+            return `${m}m ${s}s`;
+          })()
+        : a.timeTaken || "3m 45s",
+  };
+}
+
+function normalizeQuizInfo(resp = {}, fallbackQuizId) {
+  const q = resp?.quiz || resp;
+  return {
+    id: q.id || q.quiz_id || fallbackQuizId,
+    title:
+      q.title ||
+      `Custom ${q.difficulty || ""} Quiz (${q.question_count || 10} Qs)`,
+    bestScore:
+      typeof q.best_score === "number"
+        ? q.best_score
+        : typeof q.bestScore === "number"
+        ? q.bestScore
+        : null,
+    attemptsCount: q.attempts_count ?? q.attemptsCount ?? 0,
+  };
+}
+
+function OverviewSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl border border-muted/30 shadow-xs p-5 sm:p-6 space-y-4 animate-pulse">
+      <div className="h-4 w-48 bg-gray-100 rounded" />
+      <div className="flex items-center justify-around divide-x divide-muted/20">
+        <div className="flex-1 flex flex-col items-center gap-1 px-2">
+          <div className="h-8 w-16 bg-gray-100 rounded" />
+          <div className="h-3 w-20 bg-gray-100 rounded" />
+        </div>
+        <div className="flex-1 flex flex-col items-center gap-1 px-2">
+          <div className="h-8 w-16 bg-gray-100 rounded" />
+          <div className="h-3 w-20 bg-gray-100 rounded" />
+        </div>
+        <div className="flex-1 flex flex-col items-center gap-1 px-2">
+          <div className="h-8 w-16 bg-gray-100 rounded" />
+          <div className="h-3 w-20 bg-gray-100 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AttemptSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl border border-muted/30 shadow-xs p-4 sm:p-5 space-y-4 animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="h-5 w-28 bg-gray-100 rounded-full" />
+        <div className="h-6 w-14 bg-gray-100 rounded-full" />
+      </div>
+      <div className="h-1.5 w-full bg-gray-100 rounded-full" />
+      <div className="flex items-center gap-4 pt-2 border-t border-muted/20">
+        <div className="h-3 w-36 bg-gray-100 rounded" />
+        <div className="h-3 w-20 bg-gray-100 rounded" />
+      </div>
+    </div>
+  );
+}
 
 export default function QuizHistory() {
   const { id: spaceId, quizId } = useParams();
-  const navigate = useNavigate();
 
-  // Find quiz data from mockQuizzes
-  const quiz = mockQuizzes.find((q) => q.id === quizId) || mockQuizzes[0];
-  const quizDetails = getQuizDetailsById(quizId);
-  const attempts = mockQuizAttempts[quiz.id] || [];
+  const [quiz, setQuiz] = useState({ id: quizId, title: "Loading…" });
+  const [attempts, setAttempts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const loadHistory = useCallback(async () => {
+    if (!quizId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const [quizRes, histRes] = await Promise.all([
+        api.get(`/quizzes/${quizId}`).catch(() => ({ id: quizId })),
+        api.get(`/quizzes/${quizId}/history`),
+      ]);
+
+      setQuiz(normalizeQuizInfo(quizRes, quizId));
+
+      const list = Array.isArray(histRes)
+        ? histRes
+        : Array.isArray(histRes?.attempts)
+        ? histRes.attempts
+        : Array.isArray(histRes?.data)
+        ? histRes.data
+        : [];
+      setAttempts(
+        list.map(normalizeAttempt).sort((a, b) => (b.id > a.id ? 1 : -1)),
+      );
+    } catch (err) {
+      console.warn("quiz history load failed:", err?.message || err);
+      setError({
+        title: "Couldn't load quiz history",
+        message:
+          err?.status === 403
+            ? "You don't have permission to view this quiz's history."
+            : err?.status === 404
+            ? "This quiz no longer exists."
+            : err?.message || "Retry in a moment.",
+      });
+      setAttempts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [quizId, reloadKey]);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
 
   // Calculate average score
   const avgScore =
     attempts.length > 0
-      ? Math.round(
-          attempts.reduce((sum, a) => sum + a.percent, 0) / attempts.length,
-        )
+      ? Math.round(attempts.reduce((sum, a) => sum + a.percent, 0) / attempts.length)
       : null;
+
+  const bestScore =
+    quiz?.bestScore !== null && quiz?.bestScore !== undefined
+      ? quiz.bestScore
+      : attempts.length > 0
+      ? Math.max(...attempts.map((a) => a.percent))
+      : null;
+
+  const handleRetry = useCallback(() => setReloadKey((k) => k + 1), []);
 
   return (
     <div className="min-h-screen bg-light flex flex-col">
@@ -37,7 +205,7 @@ export default function QuizHistory() {
         <div className="max-w-3xl mx-auto flex items-center gap-4">
           {/* Back Button */}
           <Link
-            to={`/spaces/${spaceId || "cs-301"}?tab=quiz`}
+            to={`/spaces/${spaceId || "general"}?tab=quiz`}
             className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-brand transition-colors shrink-0 py-1 px-1.5 -ml-1.5 rounded-lg hover:bg-gray-100"
           >
             <HiArrowLeft className="w-4 h-4" />
@@ -49,7 +217,7 @@ export default function QuizHistory() {
               Past Attempts
             </span>
             <h1 className="text-sm sm:text-base font-extrabold text-darker line-clamp-1">
-              {quizDetails?.title || quiz.title}
+              {loading ? "Loading history…" : quiz?.title || "Quiz History"}
             </h1>
           </div>
         </div>
@@ -57,44 +225,56 @@ export default function QuizHistory() {
 
       {/* Main Scrollable Content */}
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {error && (
+          <ErrorBanner
+            title={error.title}
+            message={error.message}
+            onRetry={handleRetry}
+          />
+        )}
+
         {/* Performance Overview Banner */}
-        <div className="bg-white rounded-2xl border border-muted/30 shadow-xs p-5 sm:p-6">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-4">
-            Performance Overview
-          </p>
+        {loading ? (
+          <OverviewSkeleton />
+        ) : (
+          <div className="bg-white rounded-2xl border border-muted/30 shadow-xs p-5 sm:p-6">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-4">
+              Performance Overview
+            </p>
 
-          <div className="flex items-center justify-around divide-x divide-muted/20">
-            {/* Best Score */}
-            <div className="flex-1 flex flex-col items-center gap-0.5 px-2">
-              <span className="text-2xl font-black text-emerald-700">
-                {quiz.bestScore !== null ? `${quiz.bestScore}%` : "—"}
-              </span>
-              <span className="text-[11px] font-medium text-gray-400">
-                Best Score
-              </span>
-            </div>
+            <div className="flex items-center justify-around divide-x divide-muted/20">
+              {/* Best Score */}
+              <div className="flex-1 flex flex-col items-center gap-0.5 px-2">
+                <span className="text-2xl font-black text-emerald-700">
+                  {bestScore !== null ? `${bestScore}%` : "—"}
+                </span>
+                <span className="text-[11px] font-medium text-gray-400">
+                  Best Score
+                </span>
+              </div>
 
-            {/* Average */}
-            <div className="flex-1 flex flex-col items-center gap-0.5 px-2">
-              <span className="text-2xl font-black text-brand">
-                {avgScore !== null ? `${avgScore}%` : "—"}
-              </span>
-              <span className="text-[11px] font-medium text-gray-400">
-                Average
-              </span>
-            </div>
+              {/* Average */}
+              <div className="flex-1 flex flex-col items-center gap-0.5 px-2">
+                <span className="text-2xl font-black text-brand">
+                  {avgScore !== null ? `${avgScore}%` : "—"}
+                </span>
+                <span className="text-[11px] font-medium text-gray-400">
+                  Average
+                </span>
+              </div>
 
-            {/* Total Attempts */}
-            <div className="flex-1 flex flex-col items-center gap-0.5 px-2">
-              <span className="text-2xl font-black text-gray-700">
-                {attempts.length}
-              </span>
-              <span className="text-[11px] font-medium text-gray-400">
-                {attempts.length === 1 ? "Attempt" : "Attempts"}
-              </span>
+              {/* Total Attempts */}
+              <div className="flex-1 flex flex-col items-center gap-0.5 px-2">
+                <span className="text-2xl font-black text-gray-700">
+                  {attempts.length}
+                </span>
+                <span className="text-[11px] font-medium text-gray-400">
+                  {attempts.length === 1 ? "Attempt" : "Attempts"}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Attempt History List */}
         <div>
@@ -102,7 +282,12 @@ export default function QuizHistory() {
             Attempt History
           </h2>
 
-          {attempts.length > 0 ? (
+          {loading ? (
+            <div className="space-y-3.5">
+              <AttemptSkeleton />
+              <AttemptSkeleton />
+            </div>
+          ) : attempts.length > 0 ? (
             <div className="space-y-3.5">
               {attempts.map((attempt) => {
                 const isHigh = attempt.percent >= 80;
@@ -165,7 +350,7 @@ export default function QuizHistory() {
 
                     {/* View Breakdown Link */}
                     <Link
-                      to={`/spaces/${spaceId || "cs-301"}/quiz/${quiz.id}/results`}
+                      to={`/spaces/${spaceId || "general"}/quiz/${quiz.id}/results`}
                       className="flex items-center justify-between pt-2 border-t border-muted/20 text-xs font-bold text-brand hover:text-darker transition-colors group"
                     >
                       <span>View Result Breakdown</span>
@@ -197,7 +382,7 @@ export default function QuizHistory() {
       <div className="sticky bottom-0 bg-white border-t border-muted/30 px-4 sm:px-8 py-4 shadow-md">
         <div className="max-w-3xl mx-auto">
           <Link
-            to={`/spaces/${spaceId || "cs-301"}/quiz/${quiz.id}`}
+            to={`/spaces/${spaceId || "general"}/quiz/${quiz.id || quizId}`}
             className="w-full flex items-center justify-center gap-2 bg-brand text-light py-3.5 px-4 rounded-xl text-xs font-bold shadow-xs hover:bg-darker transition-all"
           >
             <HiOutlineArrowPath className="w-4 h-4" />

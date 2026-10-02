@@ -1,13 +1,19 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
-import { HiOutlineEye, HiOutlineEyeSlash } from "react-icons/hi2";
 import { FcGoogle } from "react-icons/fc";
+import { HiEye, HiEyeSlash } from "react-icons/hi2";
+import { signUp, googleOAuthSignIn } from "../lib/supabaseClient";
+
+const PASSWORD_MIN = 6;
 
 export default function Signup() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = location.state?.from || "/dashboard";
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -16,150 +22,173 @@ export default function Signup() {
     termsAgreed: false,
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [errors, setErrors] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
     termsAgreed: "",
+    generic: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Field validation rules
   const validateFullName = (name) => {
     if (!name.trim()) return "Full name is required";
+    if (name.trim().length < 2) return "Name is too short";
     return "";
   };
-
   const validateEmail = (email) => {
     if (!email) return "Email address is required";
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email) ? "" : "Please enter a valid email address";
+  };
+  const validatePassword = (pw) => {
+    if (!pw) return "Password is required";
+    if (pw.length < PASSWORD_MIN) return `Password must be at least ${PASSWORD_MIN} characters`;
     return "";
   };
-
-  const validatePassword = (password) => {
-    if (!password) return "Password is required";
-    if (password.length < 8) return "Password must be at least 8 characters";
-    return "";
-  };
-
-  const validateConfirmPassword = (confirmPassword, password) => {
-    if (!confirmPassword) return "Please confirm your password";
-    if (confirmPassword !== password) return "Passwords do not match";
+  const validateConfirm = (confirm, pw) => {
+    if (!confirm) return "Please confirm your password";
+    if (confirm !== pw) return "Passwords don't match";
     return "";
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const val = type === "checkbox" ? checked : value;
-
     setFormData((prev) => ({ ...prev, [name]: val }));
-
-    // Clear error for field being edited
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-
-    // Dynamic re-validation for confirm password if main password changes
-    if (name === "password" && formData.confirmPassword) {
-      if (formData.confirmPassword !== value) {
-        setErrors((prev) => ({ ...prev, confirmPassword: "Passwords do not match" }));
-      } else {
-        setErrors((prev) => ({ ...prev, confirmPassword: "" }));
-      }
+    if (errors[name] || errors.generic) {
+      setErrors((prev) => ({ ...prev, [name]: "", generic: "" }));
     }
   };
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
     if (name === "fullName") {
-      setErrors((prev) => ({ ...prev, fullName: validateFullName(value) }));
+      setErrors((p) => ({ ...p, fullName: validateFullName(value) }));
     } else if (name === "email") {
-      setErrors((prev) => ({ ...prev, email: validateEmail(value) }));
+      setErrors((p) => ({ ...p, email: validateEmail(value) }));
     } else if (name === "password") {
-      setErrors((prev) => ({ ...prev, password: validatePassword(value) }));
+      setErrors((p) => ({
+        ...p,
+        password: validatePassword(value),
+        confirmPassword:
+          formData.confirmPassword
+            ? validateConfirm(formData.confirmPassword, value)
+            : p.confirmPassword,
+      }));
     } else if (name === "confirmPassword") {
-      setErrors((prev) => ({
-        ...prev,
-        confirmPassword: validateConfirmPassword(value, formData.password),
+      setErrors((p) => ({
+        ...p,
+        confirmPassword: validateConfirm(value, formData.password),
       }));
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     const nameErr = validateFullName(formData.fullName);
     const emailErr = validateEmail(formData.email);
-    const passErr = validatePassword(formData.password);
-    const confirmErr = validateConfirmPassword(formData.confirmPassword, formData.password);
-    const termsErr = !formData.termsAgreed ? "You must agree to the Terms to continue" : "";
+    const passwordErr = validatePassword(formData.password);
+    const confirmErr = validateConfirm(
+      formData.confirmPassword,
+      formData.password,
+    );
+    const termsErr = !formData.termsAgreed ? "You must agree to the Terms" : "";
 
-    if (nameErr || emailErr || passErr || confirmErr || termsErr) {
+    if (nameErr || emailErr || passwordErr || confirmErr || termsErr) {
       setErrors({
         fullName: nameErr,
         email: emailErr,
-        password: passErr,
+        password: passwordErr,
         confirmPassword: confirmErr,
         termsAgreed: termsErr,
+        generic: "",
       });
       return;
     }
 
     setIsLoading(true);
+    try {
+      const data = await signUp({
+        email: formData.email.trim(),
+        password: formData.password,
+        name: formData.fullName.trim(),
+      });
 
-    // Simulate signup submission
-    setTimeout(() => {
+      localStorage.setItem("quzspace:pending-email", formData.email.trim());
+      const emailConfirmOtpRequired =
+        data?.session === null || data?.user?.identities?.length === 0;
+
+      if (emailConfirmOtpRequired) {
+        navigate("/verify-otp", {
+          state: {
+            email: formData.email.trim(),
+            mode: "signup",
+            from: redirectTo,
+          },
+        });
+      } else {
+        navigate(redirectTo, { replace: true });
+      }
+    } catch (err) {
+      const msg = err?.message || "Couldn't create your account. Try again.";
+      setErrors((p) => ({
+        ...p,
+        generic: /email.*already.*registered|already.*registered|unique.*email|duplicate/i.test(msg)
+          ? "This email is already registered. Try logging in instead."
+          : msg,
+      }));
+    } finally {
       setIsLoading(false);
-      navigate("/dashboard");
-    }, 1200);
+    }
   };
 
-  const isFormValid =
-    formData.fullName.trim() !== "" &&
-    formData.email !== "" &&
-    formData.password.length >= 8 &&
-    formData.confirmPassword === formData.password &&
-    formData.termsAgreed;
+  const handleGoogle = async () => {
+    try {
+      await googleOAuthSignIn();
+    } catch (err) {
+      setErrors((p) => ({ ...p, generic: err?.message || "Google sign-in failed." }));
+    }
+  };
 
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Turn lecture notes into personalized AI study suites today."
+      subtitle="Turn lecture notes into personalized AI study suites. We'll email you a verification code to confirm your address."
       footerText="Already have an account?"
       footerLinkText="Log in"
       footerLinkTo="/login"
     >
       <div className="space-y-5">
-        {/* Decorative Google Auth Button */}
-        <Button
-          variant="google"
-          fullWidth
-          onClick={() => alert("Google Sign-In is decorative for preview.")}
-        >
+        {errors.generic && (
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs font-semibold text-rose-700">
+            {errors.generic}
+          </div>
+        )}
+
+        <Button variant="google" fullWidth onClick={handleGoogle}>
           <FcGoogle className="w-5 h-5" />
           <span>Continue with Google</span>
         </Button>
 
-        {/* Divider */}
         <div className="relative flex items-center justify-center my-4">
           <div className="border-t border-muted/30 w-full" />
           <span className="bg-white px-3 text-xs uppercase tracking-wider text-muted font-bold absolute">
-            or
+            or use email
           </span>
         </div>
 
-        {/* Signup Form */}
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          {/* Full Name Input */}
           <Input
             label="Full Name"
             type="text"
             name="fullName"
+            autoComplete="name"
             value={formData.fullName}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -168,11 +197,11 @@ export default function Signup() {
             required
           />
 
-          {/* Email Input */}
           <Input
             label="Email Address"
             type="email"
             name="email"
+            autoComplete="email"
             value={formData.email}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -181,64 +210,64 @@ export default function Signup() {
             required
           />
 
-          {/* Password Input */}
-          <Input
-            label="Password"
-            type={showPassword ? "text" : "password"}
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="At least 8 characters"
-            helperText="Must be at least 8 characters long"
-            error={errors.password}
-            required
-            rightElement={
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="p-1 text-gray hover:text-brand transition-colors focus:outline-none"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <HiOutlineEyeSlash className="w-5 h-5" />
-                ) : (
-                  <HiOutlineEye className="w-5 h-5" />
-                )}
-              </button>
-            }
-          />
+          <div className="relative">
+            <Input
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              name="password"
+              autoComplete="new-password"
+              value={formData.password}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder={`At least ${PASSWORD_MIN} characters`}
+              error={errors.password}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-[42px] text-muted hover:text-gray transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <HiEyeSlash className="w-5 h-5" />
+              ) : (
+                <HiEye className="w-5 h-5" />
+              )}
+            </button>
+          </div>
 
-          {/* Confirm Password Input */}
-          <Input
-            label="Confirm Password"
-            type={showConfirmPassword ? "text" : "password"}
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Re-enter password"
-            error={errors.confirmPassword}
-            required
-            rightElement={
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="p-1 text-gray hover:text-brand transition-colors focus:outline-none"
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-              >
-                {showConfirmPassword ? (
-                  <HiOutlineEyeSlash className="w-5 h-5" />
-                ) : (
-                  <HiOutlineEye className="w-5 h-5" />
-                )}
-              </button>
-            }
-          />
+          <div className="relative">
+            <Input
+              label="Confirm Password"
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              autoComplete="new-password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Re-enter your password"
+              error={errors.confirmPassword}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((s) => !s)}
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-[42px] text-muted hover:text-gray transition-colors"
+              tabIndex={-1}
+            >
+              {showConfirmPassword ? (
+                <HiEyeSlash className="w-5 h-5" />
+              ) : (
+                <HiEye className="w-5 h-5" />
+              )}
+            </button>
+          </div>
 
-          {/* Terms Agreement Checkbox */}
           <div className="pt-1">
-            <label className="flex items-start gap-2.5 cursor-pointer">
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
               <input
                 type="checkbox"
                 name="termsAgreed"
@@ -259,19 +288,16 @@ export default function Signup() {
               </span>
             </label>
             {errors.termsAgreed && (
-              <p className="text-xs text-rose-600 font-medium mt-1">
-                {errors.termsAgreed}
-              </p>
+              <p className="text-xs text-rose-600 font-medium mt-1">{errors.termsAgreed}</p>
             )}
           </div>
 
-          {/* Submit Button */}
           <Button
             type="submit"
             variant="primary"
             fullWidth
             isLoading={isLoading}
-            disabled={!isFormValid}
+            disabled={!formData.termsAgreed}
             className="mt-2 py-3.5"
           >
             Create Account

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   HiXMark,
   HiLockClosed,
@@ -15,13 +15,85 @@ import {
 import logo from "../assets/Quzspace_logo.png";
 import Footer from "../components/layout/Footer";
 import Button from "../components/ui/Button";
+import ErrorBanner from "../components/shared/ErrorBanner";
 import SummaryTab from "../components/study-space/tabs/SummaryTab";
 import FlashcardsTab from "../components/study-space/tabs/FlashcardsTab";
 import QuizTab from "../components/study-space/tabs/QuizTab";
 import AvatarStack from "../components/shared/AvatarStack";
 import Leaderboard from "../components/study-space/Leaderboard";
-import { mockSharedSpace } from "../data/mockSharedSpace";
-import { mockActiveViewersPool, mockLeaderboard } from "../data/mockPresence";
+import api from "../lib/api";
+
+const STATIC_VIEWERS_POOL = [
+  { id: "v-1", name: "Alex Chen", avatarInitials: "AC", avatarColor: "bg-blue-600" },
+  { id: "v-2", name: "Sarah Jenkins", avatarInitials: "SJ", avatarColor: "bg-amber-600" },
+  { id: "v-3", name: "David Rodriguez", avatarInitials: "DR", avatarColor: "bg-emerald-600" },
+  { id: "v-4", name: "Elena Torres", avatarInitials: "ET", avatarColor: "bg-purple-600" },
+  { id: "v-5", name: "Marcus Lee", avatarInitials: "ML", avatarColor: "bg-rose-600" },
+  { id: "v-6", name: "Hannah Patel", avatarInitials: "HP", avatarColor: "bg-indigo-600" },
+];
+
+const STATIC_LEADERBOARD_FALLBACK = [
+  {
+    id: "u-1",
+    name: "Sarah Jenkins",
+    avatarInitials: "SJ",
+    avatarColor: "bg-amber-600",
+    bestScore: 100,
+    quizzesTaken: 6,
+    isTopRank: 1,
+  },
+  {
+    id: "u-2",
+    name: "Jeffrey A. (Owner)",
+    avatarInitials: "JA",
+    avatarColor: "bg-brand",
+    bestScore: 95,
+    quizzesTaken: 8,
+    isTopRank: 2,
+  },
+  {
+    id: "u-3",
+    name: "David Rodriguez",
+    avatarInitials: "DR",
+    avatarColor: "bg-emerald-600",
+    bestScore: 90,
+    quizzesTaken: 5,
+    isTopRank: 3,
+  },
+  {
+    id: "u-4",
+    name: "Alex Chen",
+    avatarInitials: "AC",
+    avatarColor: "bg-blue-600",
+    bestScore: 85,
+    quizzesTaken: 4,
+  },
+  {
+    id: "u-5",
+    name: "Elena Torres",
+    avatarInitials: "ET",
+    avatarColor: "bg-purple-600",
+    bestScore: 80,
+    quizzesTaken: 3,
+  },
+  {
+    id: "u-6",
+    name: "Marcus Lee",
+    avatarInitials: "ML",
+    avatarColor: "bg-rose-600",
+    bestScore: 75,
+    quizzesTaken: 2,
+  },
+  {
+    id: "u-7",
+    name: "You (Guest Visitor)",
+    avatarInitials: "YOU",
+    avatarColor: "bg-brand/90",
+    bestScore: 70,
+    quizzesTaken: 1,
+    isCurrentUser: true,
+  },
+];
 
 const SHARED_TABS = [
   { id: "summary", label: "Summary", icon: HiOutlineDocumentText, component: SummaryTab },
@@ -29,49 +101,149 @@ const SHARED_TABS = [
   { id: "quiz", label: "Quiz", icon: HiOutlineQuestionMarkCircle, component: QuizTab },
 ];
 
+function formatRelativeAgo(isoDate) {
+  if (!isoDate) return "Recently";
+  try {
+    const then = new Date(isoDate).getTime();
+    if (Number.isNaN(then)) return "Recently";
+    const diffMs = Date.now() - then;
+    const day = 24 * 60 * 60 * 1000;
+    const week = 7 * day;
+    if (diffMs < 2 * day) return diffMs < day ? "Today" : "Yesterday";
+    if (diffMs < week) return `${Math.floor(diffMs / day)} days ago`;
+    return `${Math.floor(diffMs / week)} weeks ago`;
+  } catch {
+    return "Recently";
+  }
+}
+
+function normalizeSpace(d = {}, shareCodeFallback) {
+  const space = d?.space || d || {};
+  const shareMeta = d?.share || {};
+  const owner = space.owner || shareMeta.owner || {};
+  return {
+    id: space.id || shareMeta.space_id || `shared-${shareCodeFallback}`,
+    shareCode: shareMeta.share_code || shareCodeFallback,
+    title: space.title || shareMeta.title || "Shared Study Space",
+    subject: space.subject || shareMeta.subject || "General",
+    ownerName:
+      owner.full_name || owner.name || shareMeta.owner_name || "A QuzSpace user",
+    ownerAvatar: owner.avatar_url || shareMeta.owner_avatar || null,
+    filesVisible:
+      typeof shareMeta.files_visible === "boolean"
+        ? shareMeta.files_visible
+        : typeof space.files_visible === "boolean"
+          ? space.files_visible
+          : true,
+    fileCount:
+      typeof space.file_count === "number" ? space.file_count : space.fileCount ?? 0,
+    sharedDate:
+      typeof shareMeta.created_at === "string"
+        ? formatRelativeAgo(shareMeta.created_at)
+        : space.sharedDate || "Recently",
+    lastAccessed:
+      typeof space.last_accessed === "string"
+        ? formatRelativeAgo(space.last_accessed)
+        : space.lastAccessed || "Recently",
+    progressPercent:
+      typeof space.progress_percent === "number"
+        ? space.progress_percent
+        : space.progressPercent ?? 0,
+    description:
+      space.description ||
+      shareMeta.description ||
+      "Shared study materials generated by QuzSpace AI.",
+    leaderboard: Array.isArray(d?.leaderboard)
+      ? d.leaderboard
+      : space.leaderboard || null,
+    viewers: Array.isArray(d?.active_viewers) ? d.active_viewers : null,
+  };
+}
+
+function HeaderSkeleton() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-4 space-y-4 animate-pulse">
+      <div className="space-y-4">
+        <div className="h-5 w-40 bg-gray-100 rounded-lg" />
+        <div className="h-9 w-2/3 bg-gray-100 rounded-lg" />
+        <div className="h-4 w-1/2 bg-gray-100 rounded" />
+      </div>
+      <div className="h-6 w-full bg-gray-100 rounded border-t border-muted/20 pt-2" />
+    </div>
+  );
+}
+
 export default function SharedSpace() {
+  const { shareCode } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showBanner, setShowBanner] = useState(true);
 
-  // Live active viewers state (Simulating realtime presence join/leave)
   const [activeViewers, setActiveViewers] = useState(
-    mockActiveViewersPool.slice(0, 4)
+    STATIC_VIEWERS_POOL.slice(0, 3),
   );
 
-  const space = mockSharedSpace;
-  const activeTabId = searchParams.get("tab") || "summary";
-  const activeTabObj = SHARED_TABS.find((t) => t.id === activeTabId) || SHARED_TABS[0];
-  const ActiveComponent = activeTabObj.component;
+  const [space, setSpace] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [notFound, setNotFound] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
-  const handleTabClick = (id) => {
-    setSearchParams({ tab: id });
-  };
+  const loadShare = useCallback(async () => {
+    if (!shareCode) return;
+    setLoading(true);
+    setError(null);
+    setNotFound(false);
+    try {
+      const res = await api.get(`/s/${encodeURIComponent(shareCode)}`);
+      setSpace(normalizeSpace(res, shareCode));
+    } catch (err) {
+      const status = err?.status || err?.response?.status;
+      if (status === 404) {
+        setNotFound(true);
+      } else {
+        console.warn("shared space load failed:", err?.message || err);
+        setError({
+          title: "Couldn't open this shared link",
+          message:
+            "The server may be starting up, or this link is temporarily unreachable. Try again shortly.",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [shareCode]);
 
-  // Subtle interval simulation: every 18s a viewer joins or leaves
+  useEffect(() => {
+    loadShare();
+  }, [loadShare, attempt]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveViewers((prev) => {
         if (prev.length < 5) {
-          // Add next viewer from pool
-          const nextViewer = mockActiveViewersPool[prev.length % mockActiveViewersPool.length];
-          return [...prev, nextViewer];
-        } else {
-          // Remove last viewer
-          return prev.slice(0, 3);
+          const next = STATIC_VIEWERS_POOL[prev.length % STATIC_VIEWERS_POOL.length];
+          return [...prev, next];
         }
+        return prev.slice(0, 3);
       });
     }, 18000);
-
     return () => clearInterval(interval);
   }, []);
+
+  const activeTabId = searchParams.get("tab") || "summary";
+  const activeTabObj = SHARED_TABS.find((t) => t.id === activeTabId) || SHARED_TABS[0];
+  const ActiveComponent = activeTabObj.component;
+
+  const handleTabClick = (id) => setSearchParams({ tab: id });
+  const handleRetry = () => setAttempt((n) => n + 1);
+
+  const leaderboardEntries = space?.leaderboard || STATIC_LEADERBOARD_FALLBACK;
 
   return (
     <div className="min-h-screen bg-light flex flex-col justify-between">
       <div>
-        {/* Top Bar (Public Lightweight Navbar) */}
         <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-muted/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            {/* Brand Logo */}
             <Link to="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
               <img src={logo} alt="QuzSpace Logo" className="h-8 sm:h-9 w-auto object-contain" />
               <span className="text-lg sm:text-xl font-extrabold tracking-tight text-brand">
@@ -79,7 +251,6 @@ export default function SharedSpace() {
               </span>
             </Link>
 
-            {/* Right Sign Up Free CTA */}
             <Link to="/signup">
               <Button variant="primary" size="sm" className="text-xs sm:text-sm shadow-xs">
                 Sign Up Free
@@ -88,7 +259,6 @@ export default function SharedSpace() {
           </div>
         </header>
 
-        {/* Slim Banner Strip */}
         {showBanner && (
           <div className="bg-brand text-light px-4 py-2.5 text-xs sm:text-sm font-medium flex items-center justify-between gap-4 animate-in fade-in">
             <div className="max-w-7xl mx-auto flex items-center gap-2 flex-1 justify-center text-center">
@@ -112,125 +282,143 @@ export default function SharedSpace() {
           </div>
         )}
 
-        {/* Shared Space Main Header */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-4 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-brand/10 text-brand border border-brand/20">
-                  {space.subject}
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 bg-white px-2.5 py-1 rounded-lg border border-muted/30">
-                  <HiUserCircle className="w-4 h-4 text-brand" />
-                  Shared by {space.ownerName}
-                </span>
-
-                {/* Social Active Viewers Cluster */}
-                <AvatarStack viewers={activeViewers} />
-              </div>
-
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-darker tracking-tight leading-tight">
-                {space.title}
-              </h1>
-
-              <p className="text-xs sm:text-sm text-gray-500 max-w-2xl leading-relaxed">
-                {space.description}
-              </p>
+        {notFound && !loading ? (
+          <div className="max-w-3xl mx-auto px-4 pt-12 pb-12">
+            <ErrorBanner
+              title="This shared link is no longer available"
+              message="The owner may have revoked sharing, or the code is incorrect. Ask the owner to share it again, or sign up to create your own study spaces."
+            />
+            <div className="mt-6 text-center">
+              <Link to="/signup">
+                <Button variant="primary" className="px-6 py-3">
+                  Create Your Own Study Space
+                </Button>
+              </Link>
             </div>
           </div>
-
-          {/* Metadata & Permission Boundary Row */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-gray-500 pt-2 border-t border-muted/20">
-            {/* Locked Files Indicator */}
-            {!space.filesVisible && (
-              <span className="flex items-center gap-1.5 font-semibold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
-                <HiLockClosed className="w-3.5 h-3.5 text-amber-600" />
-                Files not shared by owner
-              </span>
-            )}
-
-            <span className="flex items-center gap-1.5">
-              <HiOutlineCalendar className="w-4 h-4 text-muted" />
-              Shared {space.sharedDate}
-            </span>
-
-            <span className="flex items-center gap-1.5 font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-              <HiOutlineSparkles className="w-3.5 h-3.5 text-emerald-600" />
-              {space.progressPercent}% Mastery Score
-            </span>
+        ) : error && !loading ? (
+          <div className="max-w-3xl mx-auto px-4 pt-10">
+            <ErrorBanner
+              title={error.title}
+              message={error.message}
+              onRetry={handleRetry}
+            />
           </div>
-        </div>
+        ) : loading ? (
+          <HeaderSkeleton />
+        ) : space ? (
+          <>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-4 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-brand/10 text-brand border border-brand/20">
+                      {space.subject}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 bg-white px-2.5 py-1 rounded-lg border border-muted/30">
+                      <HiUserCircle className="w-4 h-4 text-brand" />
+                      Shared by {space.ownerName}
+                    </span>
 
-        {/* Read-Only Shared Tabs Bar & Grid Layout */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-          <div className="border-b border-muted/30 mb-6">
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-              {SHARED_TABS.map((tab) => {
-                const isActive = activeTabId === tab.id;
-                const TabIcon = tab.icon;
-
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => handleTabClick(tab.id)}
-                    className={`
-                      inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer
-                      ${
-                        isActive
-                          ? "bg-brand text-light shadow-sm"
-                          : "text-gray-600 hover:bg-gray-200/60 hover:text-brand"
-                      }
-                    `}
-                  >
-                    <TabIcon className="w-4 h-4" />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 2-Column Responsive Layout: Left Content, Right Leaderboard */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mb-12">
-            {/* Active Tab Content Area (2 Cols on Desktop) */}
-            <div className="lg:col-span-2 min-h-[400px]">
-              <ActiveComponent isReadOnly={true} />
-
-              {/* Create Your Own Space CTA Card */}
-              <div className="mt-8 bg-gradient-to-br from-brand/10 via-brand/5 to-white border border-brand/20 p-6 sm:p-8 rounded-3xl space-y-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
-                <div className="space-y-1.5 max-w-xl">
-                  <div className="flex items-center gap-1.5 justify-center sm:justify-start text-xs font-bold uppercase tracking-wider text-brand">
-                    <HiSparkles className="w-4 h-4 text-amber-500" />
-                    <span>AI-Powered Learning</span>
+                    <AvatarStack viewers={activeViewers} />
                   </div>
-                  <h3 className="text-xl font-extrabold text-darker">
-                    Want to create your own Study Spaces?
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                    Sign up free to upload your own PDFs, get 24/7 AI Chat tutoring, generate custom quizzes, and track weak areas automatically.
+
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-darker tracking-tight leading-tight">
+                    {space.title}
+                  </h1>
+
+                  <p className="text-xs sm:text-sm text-gray-500 max-w-2xl leading-relaxed">
+                    {space.description}
                   </p>
                 </div>
+              </div>
 
-                <div className="shrink-0">
-                  <Link to="/signup">
-                    <Button variant="primary" size="md" className="font-bold shadow-md">
-                      Sign Up Free
-                    </Button>
-                  </Link>
-                </div>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-gray-500 pt-2 border-t border-muted/20">
+                {!space.filesVisible && (
+                  <span className="flex items-center gap-1.5 font-semibold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
+                    <HiLockClosed className="w-3.5 h-3.5 text-amber-600" />
+                    Files not shared by owner
+                  </span>
+                )}
+
+                <span className="flex items-center gap-1.5">
+                  <HiOutlineCalendar className="w-4 h-4 text-muted" />
+                  Shared {space.sharedDate}
+                </span>
+
+                <span className="flex items-center gap-1.5 font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                  <HiOutlineSparkles className="w-3.5 h-3.5 text-emerald-600" />
+                  {space.progressPercent}% Mastery Score
+                </span>
               </div>
             </div>
 
-            {/* Space Leaderboard Widget (1 Col on Desktop) */}
-            <div className="lg:col-span-1 sticky top-20">
-              <Leaderboard entries={mockLeaderboard} currentUserId="u-7" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+              <div className="border-b border-muted/30 mb-6">
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                  {SHARED_TABS.map((tab) => {
+                    const isActive = activeTabId === tab.id;
+                    const TabIcon = tab.icon;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => handleTabClick(tab.id)}
+                        className={`
+                          inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer
+                          ${
+                            isActive
+                              ? "bg-brand text-light shadow-sm"
+                              : "text-gray-600 hover:bg-gray-200/60 hover:text-brand"
+                          }
+                        `}
+                      >
+                        <TabIcon className="w-4 h-4" />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mb-12">
+                <div className="lg:col-span-2 min-h-[400px]">
+                  <ActiveComponent isReadOnly={true} />
+
+                  <div className="mt-8 bg-gradient-to-br from-brand/10 via-brand/5 to-white border border-brand/20 p-6 sm:p-8 rounded-3xl space-y-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
+                    <div className="space-y-1.5 max-w-xl">
+                      <div className="flex items-center gap-1.5 justify-center sm:justify-start text-xs font-bold uppercase tracking-wider text-brand">
+                        <HiSparkles className="w-4 h-4 text-amber-500" />
+                        <span>AI-Powered Learning</span>
+                      </div>
+                      <h3 className="text-xl font-extrabold text-darker">
+                        Want to create your own Study Spaces?
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                        Sign up free to upload your own PDFs, get 24/7 AI Chat tutoring, generate custom quizzes, and track weak areas automatically.
+                      </p>
+                    </div>
+
+                    <div className="shrink-0">
+                      <Link to="/signup">
+                        <Button variant="primary" size="md" className="font-bold shadow-md">
+                          Sign Up Free
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-1 sticky top-20">
+                  <Leaderboard entries={leaderboardEntries} currentUserId="guest" />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        ) : null}
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

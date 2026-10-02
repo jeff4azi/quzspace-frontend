@@ -8,10 +8,31 @@ import {
   HiOutlineEllipsisVertical,
   HiOutlineArrowRightOnRectangle,
 } from "react-icons/hi2";
+import { useAuth } from "../../hooks/useAuth";
+
+function computeAvatarInitials(name, email, fallbackInitials = "??") {
+  if (name && name.trim()) {
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] || "";
+    const second = parts[1]?.[0] || parts[0]?.[1] || "";
+    return (first + second).toUpperCase() || fallbackInitials;
+  }
+  if (email) {
+    return email[0]?.toUpperCase() + (email.split("@")[0]?.[1]?.toUpperCase() || "") || fallbackInitials;
+  }
+  return fallbackInitials;
+}
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const { profile, user, logout } = useAuth();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+
+  const displayName = profile?.name || user?.user_metadata?.name || "You";
+  const displayEmail = user?.email || "";
+  const avatarColor = profile?.avatarColor || "bg-brand";
+  const avatarInitials = profile?.avatarInitials
+    || computeAvatarInitials(displayName, displayEmail);
 
   const navItems = [
     { label: "Dashboard", to: "/dashboard", icon: HiOutlineSquare2Stack },
@@ -19,22 +40,25 @@ export default function Sidebar() {
       label: "Study Spaces",
       to: "/spaces",
       icon: HiOutlineBookOpen,
-      count: "6",
     },
     { label: "Settings", to: "/settings", icon: HiOutlineCog6Tooth },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setShowUserDropdown(false);
-    navigate("/login");
+    try {
+      await logout();
+    } catch {
+      /* ignore */
+    }
+    navigate("/login", { replace: true });
   };
 
   return (
     <aside className="fixed top-0 left-0 h-screen w-[270px] bg-white border-r border-muted/20 z-40 hidden lg:flex flex-col justify-between p-5 text-gray font-sans select-none">
-      {/* Top Header & Brand */}
       <div className="space-y-6">
         <Link
-          to="/"
+          to="/dashboard"
           className="flex items-center gap-2.5 px-2 py-1 hover:opacity-90 transition-opacity"
         >
           <img
@@ -47,7 +71,6 @@ export default function Sidebar() {
           </span>
         </Link>
 
-        {/* Navigation Section */}
         <nav className="space-y-1">
           <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-muted/80 mb-2">
             Workspace
@@ -78,17 +101,6 @@ export default function Sidebar() {
                     />
                     <span>{item.label}</span>
                   </div>
-                  {item.count && (
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${
-                        isActive
-                          ? "bg-white/20 text-light"
-                          : "bg-gray-100 text-gray-500 group-hover:bg-brand/10 group-hover:text-brand"
-                      }`}
-                    >
-                      {item.count}
-                    </span>
-                  )}
                 </>
               )}
             </NavLink>
@@ -96,21 +108,21 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Bottom Section: User Profile Row */}
       <div className="space-y-4 pt-4 border-t border-muted/20">
-        {/* User Account Row with Dropdown */}
         <div className="relative">
           <div className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100/80 transition-colors">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-full bg-brand text-light font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
-                JA
+              <div
+                className={`w-9 h-9 rounded-full ${avatarColor} text-light font-bold text-xs flex items-center justify-center shrink-0 shadow-sm`}
+              >
+                {avatarInitials}
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-brand truncate">
-                  Jeffrey A.
+                  {displayName}
                 </p>
                 <p className="text-[11px] text-gray-500 truncate">
-                  jeffrey@quzspace.io
+                  {displayEmail}
                 </p>
               </div>
             </div>
@@ -124,7 +136,6 @@ export default function Sidebar() {
             </button>
           </div>
 
-          {/* User Dropdown Menu */}
           {showUserDropdown && (
             <div className="absolute bottom-12 right-0 w-48 bg-white rounded-xl shadow-xl border border-muted/30 p-1.5 z-50 animate-in fade-in slide-in-from-bottom-2 space-y-1">
               <Link

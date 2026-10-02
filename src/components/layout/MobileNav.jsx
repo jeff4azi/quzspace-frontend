@@ -6,15 +6,34 @@ import {
   HiOutlineCog6Tooth,
   HiPlus,
 } from "react-icons/hi2";
+import { useAuth } from "../../hooks/useAuth";
+
+function computeAvatarInitials(name, email, fallbackInitials = "??") {
+  if (name && name.trim()) {
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.[0] || "";
+    const second = parts[1]?.[0] || parts[0]?.[1] || "";
+    return (first + second).toUpperCase() || fallbackInitials;
+  }
+  if (email) {
+    return email[0]?.toUpperCase() + (email.split("@")[0]?.[1]?.toUpperCase() || "") || fallbackInitials;
+  }
+  return fallbackInitials;
+}
 
 export default function MobileNav({ onCreateClick, hideBottomNav = false }) {
   const { scrollDirection, isAtTop } = useScrollDirection();
+  const { profile, user } = useAuth();
 
   const isHeaderHidden = scrollDirection === "down" && !isAtTop;
 
+  const displayName = profile?.name || user?.user_metadata?.name || "You";
+  const avatarColor = profile?.avatarColor || "bg-brand";
+  const avatarInitials = profile?.avatarInitials
+    || computeAvatarInitials(displayName, user?.email);
+
   return (
     <>
-      {/* Top Mobile Header Bar — Native App Scroll Reactive Header */}
       <header
         className={`
           sticky top-0 z-30 px-4 py-3 flex items-center justify-between lg:hidden
@@ -27,7 +46,7 @@ export default function MobileNav({ onCreateClick, hideBottomNav = false }) {
           }
         `}
       >
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/dashboard" className="flex items-center gap-2">
           <img
             src={logo}
             alt="QuzSpace Logo"
@@ -38,19 +57,17 @@ export default function MobileNav({ onCreateClick, hideBottomNav = false }) {
           </span>
         </Link>
 
-        {/* User avatar button */}
         <Link
           to="/settings"
-          className="w-8 h-8 rounded-full bg-brand text-light font-bold text-xs flex items-center justify-center shadow-xs"
+          className={`w-8 h-8 rounded-full ${avatarColor} text-light font-bold text-xs flex items-center justify-center shadow-xs`}
+          title={displayName}
         >
-          JA
+          {avatarInitials}
         </Link>
       </header>
 
-      {/* Fixed Bottom Mobile Navigation Tab Bar — hidden on study space screens */}
       {!hideBottomNav && (
         <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-muted/30 px-6 py-2 flex items-center justify-around shadow-2xl lg:hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-          {/* Dashboard Tab */}
           <NavLink
             to="/dashboard"
             end
@@ -63,7 +80,6 @@ export default function MobileNav({ onCreateClick, hideBottomNav = false }) {
             <span>Dashboard</span>
           </NavLink>
 
-          {/* Raised Center Create Button */}
           <Link
             to="/create-space"
             onClick={onCreateClick}
@@ -78,7 +94,6 @@ export default function MobileNav({ onCreateClick, hideBottomNav = false }) {
             </span>
           </Link>
 
-          {/* Settings Tab */}
           <NavLink
             to="/settings"
             end

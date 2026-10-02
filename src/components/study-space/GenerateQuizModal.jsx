@@ -1,43 +1,102 @@
 import { useState } from "react";
 import Button from "../ui/Button";
+import api, { fetchWithIdempotency } from "../../lib/api";
 import {
   HiXMark,
   HiSparkles,
   HiOutlineQuestionMarkCircle,
-  HiCheckCircle,
+  HiExclamationTriangle,
 } from "react-icons/hi2";
+
+function normalizeQuizListItem(q = {}) {
+  return {
+    id: q.id || q.quiz_id || `q-${Math.random().toString(36).slice(2, 8)}`,
+    title:
+      q.title ||
+      `Custom ${q.difficulty || "Mixed"} Quiz (${q.question_count || q.questionCount || 10} Qs)`,
+    questionCount: q.question_count || q.questionCount || 10,
+    difficulty: q.difficulty || "Mixed",
+    createdAt: q.created_at
+      ? (() => {
+          try {
+            const then = new Date(q.created_at).getTime();
+            const diff = Date.now() - then;
+            if (diff < 60 * 1000) return "Just now";
+            if (diff < 60 * 60 * 1000)
+              return `${Math.floor(diff / (60 * 1000))} min ago`;
+            return new Date(q.created_at).toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+            });
+          } catch {
+            return "Recently";
+          }
+        })()
+      : q.createdAt || "Recently",
+    bestScore:
+      typeof q.best_score === "number"
+        ? q.best_score
+        : typeof q.bestScore === "number"
+        ? q.bestScore
+        : null,
+    attemptsCount: q.attempts_count ?? q.attemptsCount ?? 0,
+    leaderboard: Array.isArray(q.leaderboard)
+      ? q.leaderboard.map((e) => ({
+          id: e.user_id || e.id || "",
+          name: e.name || e.full_name || "Anonymous",
+          score: e.score ?? e.percent ?? 0,
+          avatarInitials: e.avatar_initials || e.avatarInitials || "??",
+          avatarColor: e.avatar_color || e.avatarColor || "bg-brand",
+        }))
+      : [],
+  };
+}
 
 export default function GenerateQuizModal({
   isOpen,
   onClose,
   onQuizGenerated,
   currentQuizCount = 0,
+  spaceId,
 }) {
   const [questionCount, setQuestionCount] = useState(20);
   const [difficulty, setDifficulty] = useState("Easy");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!spaceId || isGenerating) return;
     setIsGenerating(true);
+    setError(null);
 
-    setTimeout(() => {
-      setIsGenerating(false);
-      const newQuiz = {
-        id: `q-${Date.now()}`,
-        title: `Custom ${difficulty} Quiz (${questionCount} Qs)`,
-        questionCount: questionCount,
-        difficulty: difficulty,
-        createdAt: "Just now",
-        bestScore: null,
-        attemptsCount: 0,
-      };
-
-      onQuizGenerated(newQuiz);
+    try {
+      const idemKey = `quiz-gen-${spaceId}-${questionCount}-${difficulty}-${Date.now()}`;
+      const res = await fetchWithIdempotency(
+        `/spaces/${spaceId}/quizzes/generate`,
+        { questionCount, difficulty },
+        { idempotencyKey: idemKey },
+      );
+      const normalized = normalizeQuizListItem(
+        res?.quiz || res?.data || res,
+      );
+      if (onQuizGenerated) onQuizGenerated(normalized);
       onClose();
-    }, 1200);
+    } catch (err) {
+      console.warn("quiz generate failed:", err?.message || err);
+      setError({
+        title: "Couldn't generate your quiz",
+        message:
+          err?.status === 429
+            ? "You've generated too many quizzes recently. Please wait a moment and try again."
+            : err?.message ||
+              "The AI service might be busy. Try again in a moment.",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -80,6 +139,16 @@ export default function GenerateQuizModal({
 
         {/* Configuration Form */}
         <form onSubmit={handleSubmit} className="space-y-6 px-6 pb-6">
+          {/* Error Banner */}
+          {error && (
+            <div className="bg-rose-50/70 border border-rose-200 rounded-xl p-3.5 flex items-start gap-3">
+              <HiExclamationTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-extrabold text-rose-900">{error.title}</p>
+                <p className="text-[11px] text-rose-700/80 mt-0.5 leading-relaxed">{error.message}</p>
+              </div>
+            </div>
+          )}
           {/* Question Count Selector */}
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-brand block">
