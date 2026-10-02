@@ -1,8 +1,38 @@
 import { HiSparkles, HiChatBubbleBottomCenterText } from "react-icons/hi2";
 import SuggestedPrompt from "../SuggestedPrompt";
-import { mockSuggestedPrompts } from "../../../data/mockChatMessages";
 
-export default function ChatEmptyState({ onSelectPrompt }) {
+const DEFAULT_SUGGESTED = [
+  {
+    id: "sp-summarize",
+    label: "Summarize the key exam topics",
+    icon: "summary",
+    tone: "brand",
+  },
+  {
+    id: "sp-quizme",
+    label: "Quiz me on the hardest concepts",
+    icon: "quiz",
+    tone: "purple",
+  },
+  {
+    id: "sp-explain",
+    label: "Explain a tricky topic in simple terms",
+    icon: "explain",
+    tone: "emerald",
+  },
+  {
+    id: "sp-highyield",
+    label: "Highlight high-yield exam questions",
+    icon: "highlight",
+    tone: "amber",
+  },
+];
+
+export default function ChatEmptyState({ onSelectPrompt, suggestedPrompts }) {
+  const prompts =
+    Array.isArray(suggestedPrompts) && suggestedPrompts.length >= 3
+      ? suggestedPrompts
+      : DEFAULT_SUGGESTED;
   return (
     <div className="flex flex-col items-center justify-center min-h-[320px] p-6 text-center max-w-lg mx-auto">
       <div className="w-14 h-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center mb-4 shadow-inner">
@@ -27,9 +57,9 @@ export default function ChatEmptyState({ onSelectPrompt }) {
           Suggested Prompts
         </p>
         <div className="flex flex-col gap-2">
-          {mockSuggestedPrompts.map((prompt, idx) => (
+          {prompts.map((prompt, idx) => (
             <SuggestedPrompt
-              key={idx}
+              key={prompt.id || idx}
               prompt={prompt}
               onClick={onSelectPrompt}
             />

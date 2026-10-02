@@ -123,6 +123,25 @@ export default function QuizCard({
           {quiz.title}
         </h3>
 
+        {/* Selected topics chips (if any) */}
+        {Array.isArray(quiz.selectedTopics) && quiz.selectedTopics.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 -mt-1">
+            {quiz.selectedTopics.slice(0, 4).map((t) => (
+              <span
+                key={t}
+                className="inline-flex items-center px-2 py-0.5 rounded-full bg-brand/[0.08] text-brand text-[10px] font-bold border border-brand/20"
+              >
+                {t}
+              </span>
+            ))}
+            {quiz.selectedTopics.length > 4 && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold border border-muted/30">
+                +{quiz.selectedTopics.length - 4}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Created date & attempts metadata */}
         <div className="flex items-center gap-4 text-xs text-gray-500 font-medium">
           <span className="flex items-center gap-1">

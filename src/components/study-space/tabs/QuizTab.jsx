@@ -17,6 +17,11 @@ function normalizeQuizListItem(q = {}) {
       `Custom ${q.difficulty || "Mixed"} Quiz (${q.question_count || q.questionCount || 10} Qs)`,
     questionCount: q.question_count || q.questionCount || 10,
     difficulty: q.difficulty || "Mixed",
+    selectedTopics: Array.isArray(q.selected_topics)
+      ? q.selected_topics
+      : Array.isArray(q.selectedTopics)
+      ? q.selectedTopics
+      : [],
     createdAt: q.created_at
       ? (() => {
           try {
