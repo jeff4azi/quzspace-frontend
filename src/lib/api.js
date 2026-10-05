@@ -72,4 +72,8 @@ export async function fetchWithIdempotency(url, data = {}, config = {}) {
   return api.post(url, data, { ...config, idempotencyKey: key });
 }
 
+export async function getSpaceTopics(spaceId) {
+  return api.get(`/spaces/${spaceId}/topics`);
+}
+
 export default api;
