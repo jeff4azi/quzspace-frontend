@@ -5,11 +5,12 @@ import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import { FcGoogle } from "react-icons/fc";
 import { HiEye, HiEyeSlash } from "react-icons/hi2";
-import { signUp, googleOAuthSignIn } from "../lib/supabaseClient";
+import { useAuth } from "../hooks/useAuth";
 
 const PASSWORD_MIN = 6;
 
 export default function Signup() {
+  const { signup, googleSignIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || "/dashboard";
@@ -114,7 +115,7 @@ export default function Signup() {
 
     setIsLoading(true);
     try {
-      const data = await signUp({
+      const data = await signup({
         email: formData.email.trim(),
         password: formData.password,
         name: formData.fullName.trim(),
@@ -150,7 +151,7 @@ export default function Signup() {
 
   const handleGoogle = async () => {
     try {
-      await googleOAuthSignIn();
+      await googleSignIn();
     } catch (err) {
       setErrors((p) => ({ ...p, generic: err?.message || "Google sign-in failed." }));
     }

@@ -5,9 +5,10 @@ import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import { FcGoogle } from "react-icons/fc";
 import { HiEye, HiEyeSlash } from "react-icons/hi2";
-import { signInWithPassword, googleOAuthSignIn } from "../lib/supabaseClient";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Login() {
+  const { login, googleSignIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || "/dashboard";
@@ -47,7 +48,7 @@ export default function Login() {
     setError("");
     setIsLoading(true);
     try {
-      await signInWithPassword({ email: email.trim(), password });
+      await login({ email: email.trim(), password });
       navigate(redirectTo, { replace: true });
     } catch (err) {
       const msg = err?.message || "Couldn't sign in. Try again.";
@@ -63,7 +64,7 @@ export default function Login() {
 
   const handleGoogle = async () => {
     try {
-      await googleOAuthSignIn();
+      await googleSignIn();
     } catch (err) {
       setError(err?.message || "Google sign-in failed.");
     }

@@ -10,6 +10,9 @@ import {
   supabase,
   getCurrentSession,
   signOut as supabaseSignOut,
+  signInWithPassword,
+  signUp,
+  googleOAuthSignIn,
 } from "../lib/supabaseClient";
 import api from "../lib/api";
 
@@ -258,6 +261,21 @@ export function AuthProvider({ children }) {
     [user?.id, profile],
   );
 
+  const login = useCallback(
+    async ({ email, password }) => signInWithPassword({ email, password }),
+    [],
+  );
+
+  const signup = useCallback(
+    async ({ email, password, name }) => signUp({ email, password, name }),
+    [],
+  );
+
+  const googleSignIn = useCallback(
+    async () => googleOAuthSignIn(),
+    [],
+  );
+
   const logout = useCallback(async () => {
     try {
       await supabaseSignOut();
@@ -278,6 +296,9 @@ export function AuthProvider({ children }) {
       initialized,
       updatePreferences,
       updateProfile,
+      login,
+      signup,
+      googleSignIn,
       logout,
       isAuthenticated: !!user,
     }),
@@ -289,6 +310,9 @@ export function AuthProvider({ children }) {
       initialized,
       updatePreferences,
       updateProfile,
+      login,
+      signup,
+      googleSignIn,
       logout,
     ],
   );
