@@ -281,7 +281,7 @@ export default function FlashcardsTab({ isReadOnly = false }) {
       // optimistic update
       setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, mastered: nextVal } : c)));
       try {
-        await api.patch(`/flashcards/${cardId}/mastery`, { mastered: nextVal });
+        await api.patch(`/spaces/${spaceId}/flashcards/${cardId}`, { mastered: nextVal });
       } catch (err) {
         // rollback
         setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, mastered: !nextVal } : c)));

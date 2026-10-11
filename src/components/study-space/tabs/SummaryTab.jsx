@@ -42,9 +42,10 @@ function formatGeneratedAgo(isoDate) {
 }
 
 function normalizeSummary(payload = {}) {
-  const s = payload?.summary || payload;
+  const s = payload?.summary && typeof payload.summary === "object" ? payload.summary : payload;
   return {
     generatedAt: formatGeneratedAgo(s.generated_at || s.updated_at),
+    proseSummary: typeof s.summary === "string" ? s.summary : "",
     keyPoints: Array.isArray(s.key_points) ? s.key_points : s.keyPoints || [],
     definitions: Array.isArray(s.definitions)
       ? s.definitions.map((d) => ({
@@ -64,12 +65,13 @@ function normalizeSummary(payload = {}) {
 
 function hasContent(summary) {
   if (!summary) return false;
-  const { keyPoints, definitions, mainConcepts, examTips } = summary;
+  const { keyPoints, definitions, mainConcepts, examTips, proseSummary } = summary;
   return (
     keyPoints.length > 0 ||
     definitions.length > 0 ||
     mainConcepts.length > 0 ||
-    examTips.length > 0
+    examTips.length > 0 ||
+    Boolean(proseSummary && proseSummary.trim().length > 0)
   );
 }
 
@@ -272,6 +274,18 @@ export default function SummaryTab({ isReadOnly = false }) {
           </Button>
         )}
       </div>
+
+      {summary.proseSummary && (
+        <section className="bg-white p-6 sm:p-7 rounded-2xl border border-muted/30 shadow-xs space-y-3">
+          <h3 className="text-base font-extrabold text-brand tracking-tight flex items-center gap-2">
+            <HiOutlineBookOpen className="w-5 h-5 text-brand" />
+            <span>Overview</span>
+          </h3>
+          <p className="text-xs sm:text-sm text-gray leading-relaxed whitespace-pre-line">
+            {summary.proseSummary}
+          </p>
+        </section>
+      )}
 
       {summary.keyPoints.length > 0 && (
         <section className="bg-white p-6 sm:p-7 rounded-2xl border border-muted/30 shadow-xs space-y-4">

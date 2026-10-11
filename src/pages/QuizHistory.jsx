@@ -146,8 +146,14 @@ export default function QuizHistory() {
     setError(null);
     try {
       const [quizRes, histRes] = await Promise.all([
-        api.get(`/quizzes/${quizId}`).catch(() => ({ id: quizId })),
-        api.get(`/quizzes/${quizId}/history`),
+        (spaceId
+          ? api.get(`/spaces/${spaceId}/quizzes/${quizId}`)
+          : api.get(`/quizzes/${quizId}`)
+        ).catch(() => ({ id: quizId })),
+        (spaceId
+          ? api.get(`/spaces/${spaceId}/quizzes/${quizId}/history`)
+          : api.get(`/quizzes/${quizId}/history`)
+        ).catch(() => api.get(`/quizzes/${quizId}/history`).catch(() => [])),
       ]);
 
       setQuiz(normalizeQuizInfo(quizRes, quizId));

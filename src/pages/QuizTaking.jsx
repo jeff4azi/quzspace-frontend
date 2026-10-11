@@ -23,7 +23,7 @@ function normalizeQuestions(resp = {}) {
     : [];
   return list.map((q, idx) => ({
     id: q.id || q.question_id || `q-${idx}`,
-    question: q.question || q.text || q.prompt || "",
+    question: q.stem || q.question || q.text || q.prompt || "",
     options:
       Array.isArray(q.options)
         ? q.options
@@ -57,6 +57,7 @@ export default function QuizTaking() {
 
   const [quizDetails, setQuizDetails] = useState({ id: quizId, title: "Loading Quiz…", questionCount: 0 });
   const [questions, setQuestions] = useState([]);
+  const [attemptId, setAttemptId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -74,11 +75,20 @@ export default function QuizTaking() {
     setError(null);
     try {
       const [metaRes, takeRes] = await Promise.all([
-        api.get(`/quizzes/${quizId}`).catch(() => ({ id: quizId })),
-        api.get(`/quizzes/${quizId}/take`),
+        (spaceId
+          ? api.get(`/spaces/${spaceId}/quizzes/${quizId}`)
+          : api.get(`/quizzes/${quizId}`)
+        ).catch(() => ({ id: quizId })),
+        (spaceId
+          ? api.post(`/spaces/${spaceId}/quizzes/${quizId}/take`)
+          : api.post(`/quizzes/${quizId}/take`)
+        ).catch(async () => {
+          return api.get(`/quizzes/${quizId}/take`).catch(() => ({}));
+        }),
       ]);
       const meta = normalizeQuizMeta(metaRes, quizId);
       const qs = normalizeQuestions(takeRes);
+      setAttemptId(takeRes?.attemptId || takeRes?.attempt_id || null);
       setQuizDetails({
         ...meta,
         questionCount: meta.questionCount || qs.length,
@@ -101,7 +111,7 @@ export default function QuizTaking() {
       setLoading(true);
       setTimeout(() => setLoading(false), 50);
     }
-  }, [quizId, reloadKey]);
+  }, [quizId, spaceId, reloadKey]);
 
   useEffect(() => {
     void loadQuizForTaking();
@@ -150,9 +160,24 @@ export default function QuizTaking() {
           typeof userAnswers[idx] === "number" ? userAnswers[idx] : null,
       }));
 
-      const res = await api.post(`/quizzes/${quizId}/submit`, {
-        answers: answersPayload,
-      });
+      let res;
+      if (attemptId) {
+        res = await api.post(`/attempts/${attemptId}/submit`, {
+          answers: answersPayload,
+        }).catch(() => null);
+      }
+      if (!res && spaceId) {
+        res = await api.post(`/spaces/${spaceId}/quizzes/${quizId}/submit`, {
+          attemptId,
+          answers: answersPayload,
+        }).catch(() => null);
+      }
+      if (!res) {
+        res = await api.post(`/quizzes/${quizId}/submit`, {
+          attemptId,
+          answers: answersPayload,
+        });
+      }
 
       const graded = res?.data || res || {};
       const gradedQuestions =
