@@ -16,6 +16,7 @@ import {
   HiOutlineTrash
 } from "react-icons/hi2";
 import AvatarStack from "../shared/AvatarStack";
+import api from "../../lib/api";
 
 // Subject icon resolver helper
 function getSubjectIcon(subject = "") {
@@ -37,15 +38,35 @@ export default function StudySpaceCard({
   progressPercent,
   accentStyle = "from-brand to-gray-700",
   activeMembers = [],
+  onDelete,
+  onRename,
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const SubjectIcon = getSubjectIcon(subject);
 
-  const handleDropdownAction = (e, actionName) => {
+  const handleDropdownAction = async (e, actionName) => {
     e.preventDefault();
     e.stopPropagation();
     setShowDropdown(false);
-    alert(`${actionName} placeholder for "${title}"`);
+    if (actionName === "Delete") {
+      if (onDelete) onDelete(id);
+    } else if (actionName === "Rename") {
+      if (onRename) onRename(id, title);
+    } else if (actionName === "Share") {
+      try {
+        const resp = await api.post(`/spaces/${id}/share`, { filesVisible: true });
+        const code = resp?.share_code || resp?.code;
+        const url = code ? `${window.location.origin}/s/${code}` : "";
+        if (url && navigator?.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url);
+          alert("Invite link copied to clipboard!");
+        } else if (url) {
+          alert("Share link: " + url);
+        }
+      } catch (err) {
+        alert("Couldn't create share link right now.");
+      }
+    }
   };
 
   return (

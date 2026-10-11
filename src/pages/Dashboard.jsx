@@ -134,6 +134,29 @@ export default function Dashboard() {
     navigate("/create-space");
   };
 
+  const handleDeleteSpace = async (spaceId) => {
+    if (!window.confirm("Are you sure you want to delete this study space? This cannot be undone.")) return;
+    try {
+      await api.delete(`/spaces/${spaceId}`);
+      setSpaces((prev) => prev.filter((s) => s.id !== spaceId));
+    } catch (err) {
+      alert(err?.message || "Failed to delete space");
+    }
+  };
+
+  const handleRenameSpace = async (spaceId, currentTitle) => {
+    const newTitle = window.prompt("Enter new title for this study space:", currentTitle);
+    if (!newTitle || newTitle.trim() === currentTitle) return;
+    try {
+      await api.patch(`/spaces/${spaceId}`, { title: newTitle.trim() });
+      setSpaces((prev) =>
+        prev.map((s) => (s.id === spaceId ? { ...s, title: newTitle.trim() } : s)),
+      );
+    } catch (err) {
+      alert(err?.message || "Failed to rename space");
+    }
+  };
+
   const handleRetry = () => setAttempt((n) => n + 1);
 
   return (
@@ -189,6 +212,8 @@ export default function Dashboard() {
                 progressPercent={space.progressPercent}
                 accentStyle={space.accentStyle}
                 activeMembers={space.activeMembers}
+                onDelete={handleDeleteSpace}
+                onRename={handleRenameSpace}
               />
             ))}
           </div>
