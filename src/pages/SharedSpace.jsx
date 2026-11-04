@@ -23,78 +23,6 @@ import AvatarStack from "../components/shared/AvatarStack";
 import Leaderboard from "../components/study-space/Leaderboard";
 import api from "../lib/api";
 
-const STATIC_VIEWERS_POOL = [
-  { id: "v-1", name: "Alex Chen", avatarInitials: "AC", avatarColor: "bg-blue-600" },
-  { id: "v-2", name: "Sarah Jenkins", avatarInitials: "SJ", avatarColor: "bg-amber-600" },
-  { id: "v-3", name: "David Rodriguez", avatarInitials: "DR", avatarColor: "bg-emerald-600" },
-  { id: "v-4", name: "Elena Torres", avatarInitials: "ET", avatarColor: "bg-purple-600" },
-  { id: "v-5", name: "Marcus Lee", avatarInitials: "ML", avatarColor: "bg-rose-600" },
-  { id: "v-6", name: "Hannah Patel", avatarInitials: "HP", avatarColor: "bg-indigo-600" },
-];
-
-const STATIC_LEADERBOARD_FALLBACK = [
-  {
-    id: "u-1",
-    name: "Sarah Jenkins",
-    avatarInitials: "SJ",
-    avatarColor: "bg-amber-600",
-    bestScore: 100,
-    quizzesTaken: 6,
-    isTopRank: 1,
-  },
-  {
-    id: "u-2",
-    name: "Jeffrey A. (Owner)",
-    avatarInitials: "JA",
-    avatarColor: "bg-brand",
-    bestScore: 95,
-    quizzesTaken: 8,
-    isTopRank: 2,
-  },
-  {
-    id: "u-3",
-    name: "David Rodriguez",
-    avatarInitials: "DR",
-    avatarColor: "bg-emerald-600",
-    bestScore: 90,
-    quizzesTaken: 5,
-    isTopRank: 3,
-  },
-  {
-    id: "u-4",
-    name: "Alex Chen",
-    avatarInitials: "AC",
-    avatarColor: "bg-blue-600",
-    bestScore: 85,
-    quizzesTaken: 4,
-  },
-  {
-    id: "u-5",
-    name: "Elena Torres",
-    avatarInitials: "ET",
-    avatarColor: "bg-purple-600",
-    bestScore: 80,
-    quizzesTaken: 3,
-  },
-  {
-    id: "u-6",
-    name: "Marcus Lee",
-    avatarInitials: "ML",
-    avatarColor: "bg-rose-600",
-    bestScore: 75,
-    quizzesTaken: 2,
-  },
-  {
-    id: "u-7",
-    name: "You (Guest Visitor)",
-    avatarInitials: "YOU",
-    avatarColor: "bg-brand/90",
-    bestScore: 70,
-    quizzesTaken: 1,
-    isCurrentUser: true,
-  },
-];
-
 const SHARED_TABS = [
   { id: "summary", label: "Summary", icon: HiOutlineDocumentText, component: SummaryTab },
   { id: "flashcards", label: "Flashcards", icon: HiOutlineRectangleStack, component: FlashcardsTab },
@@ -178,10 +106,6 @@ export default function SharedSpace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showBanner, setShowBanner] = useState(true);
 
-  const [activeViewers, setActiveViewers] = useState(
-    STATIC_VIEWERS_POOL.slice(0, 3),
-  );
-
   const [space, setSpace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -217,19 +141,6 @@ export default function SharedSpace() {
     loadShare();
   }, [loadShare, attempt]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveViewers((prev) => {
-        if (prev.length < 5) {
-          const next = STATIC_VIEWERS_POOL[prev.length % STATIC_VIEWERS_POOL.length];
-          return [...prev, next];
-        }
-        return prev.slice(0, 3);
-      });
-    }, 18000);
-    return () => clearInterval(interval);
-  }, []);
-
   const activeTabId = searchParams.get("tab") || "summary";
   const activeTabObj = SHARED_TABS.find((t) => t.id === activeTabId) || SHARED_TABS[0];
   const ActiveComponent = activeTabObj.component;
@@ -237,7 +148,8 @@ export default function SharedSpace() {
   const handleTabClick = (id) => setSearchParams({ tab: id });
   const handleRetry = () => setAttempt((n) => n + 1);
 
-  const leaderboardEntries = space?.leaderboard || STATIC_LEADERBOARD_FALLBACK;
+  const activeViewers = space?.viewers || [];
+  const leaderboardEntries = space?.leaderboard || [];
 
   return (
     <div className="min-h-screen bg-light flex flex-col justify-between">
