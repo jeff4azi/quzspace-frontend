@@ -29,7 +29,7 @@ function getFileTypeBadge(file) {
   return { icon: HiOutlineDocumentCheck, color: "bg-gray-100 text-gray-700 border-gray-200", label: "TXT" };
 }
 
-export default function FileRow({ file, onDelete, onDownload, onRename }) {
+export default function FileRow({ file, canManage = true, onDelete, onDownload, onRename }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const badge = getFileTypeBadge(file);
   const BadgeIcon = badge.icon;
@@ -152,20 +152,24 @@ export default function FileRow({ file, onDelete, onDownload, onRename }) {
                 <HiOutlineArrowDownTray className="w-4 h-4 text-gray-500" />
                 <span>Download</span>
               </button>
-              <button
-                onClick={(e) => handleAction(e, onRename, "Rename")}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
-              >
-                <HiOutlinePencil className="w-4 h-4 text-gray-500" />
-                <span>Rename</span>
-              </button>
-              <button
-                onClick={(e) => handleAction(e, onDelete, "Delete")}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left"
-              >
-                <HiOutlineTrash className="w-4 h-4 text-rose-500" />
-                <span>Delete</span>
-              </button>
+              {canManage && (
+                <>
+                  <button
+                    onClick={(e) => handleAction(e, onRename, "Rename")}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
+                  >
+                    <HiOutlinePencil className="w-4 h-4 text-gray-500" />
+                    <span>Rename</span>
+                  </button>
+                  <button
+                    onClick={(e) => handleAction(e, onDelete, "Delete")}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left"
+                  >
+                    <HiOutlineTrash className="w-4 h-4 text-rose-500" />
+                    <span>Delete</span>
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>

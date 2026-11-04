@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   HiXMark,
@@ -10,7 +10,11 @@ import {
   HiUserCircle,
   HiOutlineCalendar,
   HiOutlineSparkles,
+  HiCheckCircle,
+  HiOutlineBookmarkSquare,
+  HiOutlineTrash,
 } from "react-icons/hi2";
+import { CgSpinner } from "react-icons/cg";
 
 import logo from "../assets/Quzspace_logo.png";
 import Footer from "../components/layout/Footer";
@@ -21,6 +25,7 @@ import FlashcardsTab from "../components/study-space/tabs/FlashcardsTab";
 import QuizTab from "../components/study-space/tabs/QuizTab";
 import AvatarStack from "../components/shared/AvatarStack";
 import Leaderboard from "../components/study-space/Leaderboard";
+import { useAuth } from "../hooks/useAuth";
 import api from "../lib/api";
 
 const SHARED_TABS = [
@@ -85,6 +90,10 @@ function normalizeSpace(d = {}, shareCodeFallback) {
       ? d.leaderboard
       : space.leaderboard || null,
     viewers: Array.isArray(d?.active_viewers) ? d.active_viewers : null,
+    // Read-only preview material served by the public share endpoint.
+    summary: d?.summary || null,
+    quizzes: Array.isArray(d?.quizzes) ? d.quizzes : [],
+    flashcards: Array.isArray(d?.flashcards) ? d.flashcards : [],
   };
 }
 
@@ -105,12 +114,20 @@ export default function SharedSpace() {
   const { shareCode } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showBanner, setShowBanner] = useState(true);
+  const { user } = useAuth();
 
   const [space, setSpace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [attempt, setAttempt] = useState(0);
+
+  // Membership: a logged-in visitor is auto-saved to their dashboard as a viewer.
+  const [membership, setMembership] = useState(null);
+  const [savingMembership, setSavingMembership] = useState(false);
+  const [membershipError, setMembershipError] = useState(null);
+  const [removingMembership, setRemovingMembership] = useState(false);
+  const removedRef = useRef(false);
 
   const loadShare = useCallback(async () => {
     if (!shareCode) return;
@@ -141,6 +158,47 @@ export default function SharedSpace() {
     loadShare();
   }, [loadShare, attempt]);
 
+  const saveMembership = useCallback(async () => {
+    if (!space?.id) return;
+    setSavingMembership(true);
+    setMembershipError(null);
+    try {
+      const res = await api.post(`/spaces/${space.id}/membership`, {});
+      removedRef.current = false;
+      setMembership({ role: res?.role || "viewer" });
+    } catch (err) {
+      setMembershipError(
+        err?.message || "Couldn't save this space to your dashboard.",
+      );
+    } finally {
+      setSavingMembership(false);
+    }
+  }, [space?.id]);
+
+  // Signed-in visitors get the space saved to their dashboard automatically.
+  useEffect(() => {
+    if (!user?.id || !space?.id) return;
+    if (membership || removedRef.current) return;
+    void saveMembership();
+  }, [user?.id, space?.id, membership, saveMembership]);
+
+  const handleRemoveMembership = useCallback(async () => {
+    if (!space?.id) return;
+    setRemovingMembership(true);
+    setMembershipError(null);
+    try {
+      await api.delete(`/spaces/${space.id}/membership/me`);
+      removedRef.current = true;
+      setMembership(null);
+    } catch (err) {
+      setMembershipError(
+        err?.message || "Couldn't remove this space from your dashboard.",
+      );
+    } finally {
+      setRemovingMembership(false);
+    }
+  }, [space?.id]);
+
   const activeTabId = searchParams.get("tab") || "summary";
   const activeTabObj = SHARED_TABS.find((t) => t.id === activeTabId) || SHARED_TABS[0];
   const ActiveComponent = activeTabObj.component;
@@ -150,6 +208,25 @@ export default function SharedSpace() {
 
   const activeViewers = space?.viewers || [];
   const leaderboardEntries = space?.leaderboard || [];
+
+  const isMember = !!membership;
+  const canAuthor =
+    membership?.role === "owner" || membership?.role === "collaborator";
+
+  // Visitors who have not joined yet get a read-only preview built from the
+  // public share payload — they never call the member-only space endpoints.
+  const isPreview = !isMember;
+  const preview = useMemo(
+    () =>
+      isPreview
+        ? {
+            summary: space?.summary ? { summary: space.summary } : null,
+            flashcards: space?.flashcards || [],
+            quizzes: space?.quizzes || [],
+          }
+        : null,
+    [isPreview, space?.summary, space?.flashcards, space?.quizzes],
+  );
 
   return (
     <div className="min-h-screen bg-light flex flex-col justify-between">
@@ -163,11 +240,50 @@ export default function SharedSpace() {
               </span>
             </Link>
 
-            <Link to="/signup">
-              <Button variant="primary" size="sm" className="text-xs sm:text-sm shadow-xs">
-                Sign Up Free
-              </Button>
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-2">
+                {isMember ? (
+                  <>
+                    <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <HiCheckCircle className="w-3.5 h-3.5" />
+                      Saved to your dashboard
+                    </span>
+                    {membership?.role !== "owner" && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveMembership}
+                        disabled={removingMembership}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-rose-600 px-2.5 py-1 rounded-lg hover:bg-rose-50 transition-colors disabled:opacity-60"
+                      >
+                        {removingMembership ? (
+                          <CgSpinner className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <HiOutlineTrash className="w-3.5 h-3.5" />
+                        )}
+                        <span>Remove</span>
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={saveMembership}
+                    isLoading={savingMembership}
+                    className="text-xs sm:text-sm shadow-xs"
+                  >
+                    <HiOutlineBookmarkSquare className="w-4 h-4" />
+                    <span>Save to my dashboard</span>
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Link to="/signup">
+                <Button variant="primary" size="sm" className="text-xs sm:text-sm shadow-xs">
+                  Sign Up Free
+                </Button>
+              </Link>
+            )}
           </div>
         </header>
 
@@ -179,9 +295,11 @@ export default function SharedSpace() {
                 You're viewing a shared Study Space · Powered by{" "}
                 <strong className="font-extrabold">QuzSpace</strong>
               </span>
-              <Link to="/signup" className="underline font-bold hover:text-amber-200 ml-1">
-                Sign Up
-              </Link>
+              {!user && (
+                <Link to="/signup" className="underline font-bold hover:text-amber-200 ml-1">
+                  Sign Up
+                </Link>
+              )}
             </div>
             <button
               type="button"
@@ -265,6 +383,12 @@ export default function SharedSpace() {
               </div>
             </div>
 
+            {membershipError && (
+              <p className="max-w-7xl mx-auto text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-2.5">
+                {membershipError}
+              </p>
+            )}
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
               <div className="border-b border-muted/30 mb-6">
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
@@ -296,7 +420,11 @@ export default function SharedSpace() {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mb-12">
                 <div className="lg:col-span-2 min-h-[400px]">
-                  <ActiveComponent isReadOnly={true} />
+                  <ActiveComponent
+                    isReadOnly={!canAuthor}
+                    canStudy={isMember}
+                    preview={preview}
+                  />
 
                   <div className="mt-8 bg-gradient-to-br from-brand/10 via-brand/5 to-white border border-brand/20 p-6 sm:p-8 rounded-3xl space-y-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
                     <div className="space-y-1.5 max-w-xl">
@@ -313,9 +441,9 @@ export default function SharedSpace() {
                     </div>
 
                     <div className="shrink-0">
-                      <Link to="/signup">
+                      <Link to={user ? "/dashboard" : "/signup"}>
                         <Button variant="primary" size="md" className="font-bold shadow-md">
-                          Sign Up Free
+                          {user ? "Go to Dashboard" : "Sign Up Free"}
                         </Button>
                       </Link>
                     </div>
@@ -323,7 +451,7 @@ export default function SharedSpace() {
                 </div>
 
                 <div className="lg:col-span-1 sticky top-20">
-                  <Leaderboard entries={leaderboardEntries} currentUserId="guest" />
+                  <Leaderboard entries={leaderboardEntries} currentUserId={user?.id || "guest"} />
                 </div>
               </div>
             </div>

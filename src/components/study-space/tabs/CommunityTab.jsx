@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { HiUserPlus, HiUsers, HiLink, HiUserGroup } from "react-icons/hi2";
+import { HiUsers, HiLink, HiUserGroup, HiShieldCheck } from "react-icons/hi2";
 import { CgSpinner } from "react-icons/cg";
 import CommunityMemberRow from "../CommunityMemberRow";
-import CommunityEmptyState from "./CommunityEmptyState";
-import InviteCollaboratorModal from "../InviteCollaboratorModal";
 import Leaderboard from "../Leaderboard";
 import Button from "../../ui/Button";
 import ErrorBanner from "../../shared/ErrorBanner";
@@ -42,55 +40,34 @@ function computeInitials(name = "", email = "") {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function normalizeCollaborator(c = {}, idx = 0) {
-  const name = c.full_name || c.name || c.email || "Collaborator";
-  const email = c.email || "";
+function normalizeMember(m = {}, idx = 0, defaultRole = "viewer") {
+  const name = m.full_name || m.name || m.email || "Member";
+  const email = m.email || "";
   return {
-    id: c.id || c.user_id || `collab-${idx}-${email.slice(0, 6)}`,
+    id: m.id || m.user_id || `member-${idx}-${email.slice(0, 6)}`,
     name,
-    avatarInitials: c.avatar_initials || c.avatarInitials || computeInitials(name, email),
-    avatarColor: c.avatar_color || c.avatarColor || pickAvatarColor(c.id || email || name),
-    role: c.role || "collaborator",
-    joinedDate: c.joined_at || c.invited_at || c.joinedDate || "Joined recently",
+    avatarInitials: m.avatar_initials || m.avatarInitials || computeInitials(name, email),
+    avatarColor: m.avatar_color || m.avatarColor || pickAvatarColor(m.id || m.user_id || email || name),
+    role: m.role || defaultRole,
+    joinedDate: m.joined_at || m.joinedDate || m.invited_at || "Joined recently",
     email,
-    quizzesTaken: typeof c.quizzes_taken === "number" ? c.quizzes_taken : typeof c.quizzesTaken === "number" ? c.quizzesTaken : 0,
+    quizzesTaken:
+      typeof m.quizzes_taken === "number"
+        ? m.quizzes_taken
+        : typeof m.quizzesTaken === "number"
+        ? m.quizzesTaken
+        : 0,
     flashcardsReviewed:
-      typeof c.flashcards_reviewed === "number"
-        ? c.flashcards_reviewed
-        : typeof c.flashcardsReviewed === "number"
-        ? c.flashcardsReviewed
+      typeof m.flashcards_reviewed === "number"
+        ? m.flashcards_reviewed
+        : typeof m.flashcardsReviewed === "number"
+        ? m.flashcardsReviewed
         : 0,
     avgScore:
-      typeof c.avg_score === "number"
-        ? Math.round(c.avg_score)
-        : typeof c.avgScore === "number"
-        ? Math.round(c.avgScore)
-        : 0,
-  };
-}
-
-function normalizeVisitor(v = {}, idx = 0) {
-  const name = v.full_name || v.name || v.email || "Visitor";
-  const email = v.email || "";
-  return {
-    id: v.id || v.user_id || v.visitor_id || `visitor-${idx}-${email.slice(0, 6)}`,
-    name,
-    avatarInitials: v.avatar_initials || v.avatarInitials || computeInitials(name, email),
-    avatarColor: v.avatar_color || v.avatarColor || pickAvatarColor(v.id || email || name),
-    role: v.role || "visitor",
-    firstVisited: v.first_visited || v.firstVisited || v.joined_at || "Visited recently",
-    quizzesTaken: typeof v.quizzes_taken === "number" ? v.quizzes_taken : typeof v.quizzesTaken === "number" ? v.quizzesTaken : 0,
-    flashcardsReviewed:
-      typeof v.flashcards_reviewed === "number"
-        ? v.flashcards_reviewed
-        : typeof v.flashcardsReviewed === "number"
-        ? v.flashcardsReviewed
-        : 0,
-    avgScore:
-      typeof v.avg_score === "number"
-        ? Math.round(v.avg_score)
-        : typeof v.avgScore === "number"
-        ? Math.round(v.avgScore)
+      typeof m.avg_score === "number"
+        ? Math.round(m.avg_score)
+        : typeof m.avgScore === "number"
+        ? Math.round(m.avgScore)
         : 0,
   };
 }
@@ -102,7 +79,7 @@ function normalizeLeaderboardEntry(e = {}, idx = 0) {
     id: e.id || e.user_id || `lb-${idx}-${email.slice(0, 6)}`,
     name,
     avatarInitials: e.avatar_initials || e.avatarInitials || computeInitials(name, email),
-    avatarColor: e.avatar_color || e.avatarColor || pickAvatarColor(e.id || email || name),
+    avatarColor: e.avatar_color || e.avatarColor || pickAvatarColor(e.id || e.user_id || email || name),
     role: e.role || "learner",
     bestScore:
       typeof e.best_score === "number"
@@ -182,15 +159,17 @@ function LeaderboardSkeleton() {
 export default function CommunityTab() {
   const { id: spaceId } = useParams();
 
-  const [collaborators, setCollaborators] = useState([]);
-  const [linkTakers, setLinkTakers] = useState([]);
+  const [owner, setOwner] = useState(null);
+  const [contributors, setContributors] = useState([]);
+  const [viewers, setViewers] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [myRole, setMyRole] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [busyUserId, setBusyUserId] = useState(null);
   const [shareState, setShareState] = useState({
     isLoading: false,
     shareUrl: "",
@@ -199,6 +178,8 @@ export default function CommunityTab() {
     toast: "",
   });
 
+  const isOwner = myRole === "owner";
+
   const loadCommunity = useCallback(async () => {
     if (!spaceId) return;
     setLoading(true);
@@ -206,57 +187,31 @@ export default function CommunityTab() {
     try {
       const res = await api.get(`/spaces/${spaceId}/community`);
       const payload = res && typeof res === "object" ? res : {};
-      const rawCollabs = Array.isArray(payload.collaborators)
-        ? payload.collaborators
-        : Array.isArray(payload.data?.collaborators)
-        ? payload.data.collaborators
-        : [];
-      const rawVisitors = Array.isArray(payload.visitors)
-        ? payload.visitors
-        : Array.isArray(payload.link_takers)
-        ? payload.link_takers
-        : Array.isArray(payload.data?.visitors)
-        ? payload.data.visitors
-        : [];
-      const rawLeaderboard = Array.isArray(payload.leaderboard)
-        ? payload.leaderboard
-        : Array.isArray(payload.data?.leaderboard)
-        ? payload.data.leaderboard
-        : [];
+      const rawOwner = payload.owner && typeof payload.owner === "object" ? payload.owner : null;
+      const rawContributors = Array.isArray(payload.contributors) ? payload.contributors : [];
+      const rawViewers = Array.isArray(payload.viewers) ? payload.viewers : [];
+      const rawLeaderboard = Array.isArray(payload.leaderboard) ? payload.leaderboard : [];
 
-      const normCollabs = rawCollabs.map(normalizeCollaborator);
-      const normVisitors = rawVisitors.map(normalizeVisitor);
-      const lbRaw =
-        rawLeaderboard.length > 0
-          ? rawLeaderboard
-          : [
-              ...normCollabs.map((c) => ({
-                ...c,
-                bestScore: c.avgScore,
-                role: c.role,
-              })),
-              ...normVisitors.map((v) => ({
-                ...v,
-                bestScore: v.avgScore,
-                role: v.role,
-              })),
-            ];
-      const normLB = lbRaw
+      const normContributors = rawContributors.map((m, i) => normalizeMember(m, i, "collaborator"));
+      const normViewers = rawViewers.map((m, i) => normalizeMember(m, i, "viewer"));
+      const normLB = rawLeaderboard
         .map(normalizeLeaderboardEntry)
         .sort((a, b) => b.bestScore - a.bestScore);
 
       const me = normLB.find((e) => e.isCurrentUser);
       setCurrentUserId(me?.id || null);
-      setCollaborators(normCollabs);
-      setLinkTakers(normVisitors);
+      setOwner(rawOwner ? normalizeMember(rawOwner, 0, "owner") : null);
+      setContributors(normContributors);
+      setViewers(normViewers);
       setLeaderboard(normLB);
+      setMyRole(payload.my_role || null);
 
       if (payload.share) {
         setShareState((s) => ({
           ...s,
           shareEnabled: !!payload.share.enabled,
-          shareCode: payload.share.share_code || payload.share.code || "",
-          shareUrl: payload.share.share_url || payload.share.url || "",
+          shareCode: payload.share.share_code || "",
+          shareUrl: payload.share.share_url || "",
         }));
       }
     } catch (err) {
@@ -266,11 +221,12 @@ export default function CommunityTab() {
         title: "Couldn't load community",
         message:
           status === 403
-            ? "You don't have permission to view collaborators in this space."
+            ? "You don't have permission to view members of this space."
             : err?.message || "Try again in a moment.",
       });
-      setCollaborators([]);
-      setLinkTakers([]);
+      setOwner(null);
+      setContributors([]);
+      setViewers([]);
       setLeaderboard([]);
     } finally {
       setLoading(false);
@@ -283,10 +239,45 @@ export default function CommunityTab() {
 
   const handleRetry = useCallback(() => setReloadKey((k) => k + 1), []);
 
-  const handleInviteSent = useCallback((newCollaborator) => {
-    const norm = normalizeCollaborator(newCollaborator, Date.now());
-    setCollaborators((prev) => [norm, ...prev]);
-  }, []);
+  const handleChangeRole = useCallback(
+    async (userId, role) => {
+      if (!spaceId) return;
+      setBusyUserId(userId);
+      setError(null);
+      try {
+        await api.patch(`/spaces/${spaceId}/collaborators/${userId}`, { role });
+        setReloadKey((k) => k + 1);
+      } catch (err) {
+        setError({
+          title: "Couldn't update this member",
+          message: err?.message || "Please try again.",
+        });
+      } finally {
+        setBusyUserId(null);
+      }
+    },
+    [spaceId],
+  );
+
+  const handleRemoveMember = useCallback(
+    async (userId) => {
+      if (!spaceId) return;
+      setBusyUserId(userId);
+      setError(null);
+      try {
+        await api.delete(`/spaces/${spaceId}/collaborators/${userId}`);
+        setReloadKey((k) => k + 1);
+      } catch (err) {
+        setError({
+          title: "Couldn't remove this member",
+          message: err?.message || "Please try again.",
+        });
+      } finally {
+        setBusyUserId(null);
+      }
+    },
+    [spaceId],
+  );
 
   const handleToggleShare = useCallback(async () => {
     if (!spaceId) return;
@@ -308,12 +299,7 @@ export default function CommunityTab() {
         });
         const payload = resp || {};
         const code = payload.share_code || payload.code || shareState.shareCode;
-        const url =
-          payload.share_url ||
-          payload.url ||
-          (code
-            ? `${window.location.origin}/s/${code}`
-            : "");
+        const url = payload.share_url || payload.url || (code ? `${window.location.origin}/s/${code}` : "");
         setShareState((s) => ({
           ...s,
           isLoading: false,
@@ -356,7 +342,7 @@ export default function CommunityTab() {
     }
   }, [shareState.shareUrl]);
 
-  const totalMembers = collaborators.length + linkTakers.length;
+  const totalMembers = contributors.length + viewers.length + (owner ? 1 : 0);
 
   if (loading) {
     return (
@@ -411,122 +397,146 @@ export default function CommunityTab() {
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-extrabold text-darker flex items-center gap-2">
               <HiUsers className="w-5 h-5 text-brand" />
-              Community & Collaborators
+              Community
             </h2>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand/10 text-brand border border-brand/20">
-              {totalMembers + 1} total members
+              {totalMembers} {totalMembers === 1 ? "member" : "members"}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-gray-500">
-            Everyone learning, generating quizzes, and revising materials in this space.
+            Everyone who has this space saved to their dashboard. Contributors can add files and generate materials.
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row shrink-0 gap-2">
-          <Button
-            variant={shareState.shareEnabled ? "outline" : "ghost"}
-            onClick={shareState.shareUrl && shareState.shareEnabled ? handleCopyLink : handleToggleShare}
-            isLoading={shareState.isLoading}
-            icon={HiLink}
-            className="text-xs font-bold"
-          >
-            {shareState.shareEnabled
-              ? shareState.shareUrl
-                ? "Copy Invite Link"
-                : "Revoke Share Link"
-              : "Enable Public Link"}
-          </Button>
-          <Button
-            variant="primary"
-            icon={HiUserPlus}
-            onClick={() => setIsModalOpen(true)}
-            className="w-full sm:w-auto text-xs sm:text-sm font-bold"
-          >
-            Invite Collaborators
-          </Button>
+          {isOwner ? (
+            <Button
+              variant={shareState.shareEnabled ? "outline" : "ghost"}
+              onClick={shareState.shareUrl && shareState.shareEnabled ? handleCopyLink : handleToggleShare}
+              isLoading={shareState.isLoading}
+              icon={HiLink}
+              className="text-xs font-bold"
+            >
+              {shareState.shareEnabled
+                ? shareState.shareUrl
+                  ? "Copy Invite Link"
+                  : "Revoke Share Link"
+                : "Enable Public Link"}
+            </Button>
+          ) : shareState.shareEnabled && shareState.shareUrl ? (
+            <Button
+              variant="outline"
+              onClick={handleCopyLink}
+              icon={HiLink}
+              className="text-xs font-bold"
+            >
+              Copy Invite Link
+            </Button>
+          ) : null}
         </div>
       </div>
 
-      <InviteCollaboratorModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onInviteSent={handleInviteSent}
-        spaceId={spaceId}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-2 space-y-6">
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-darker flex items-center gap-2">
+                <HiShieldCheck className="w-4 h-4 text-amber-600" />
+                <span>Owner</span>
+              </h3>
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                Full control
+              </span>
+            </div>
+            {owner ? (
+              <CommunityMemberRow member={owner} />
+            ) : (
+              <div className="text-xs text-gray-400 italic p-3">Owner unavailable.</div>
+            )}
+          </section>
 
-      {totalMembers === 0 ? (
-        <CommunityEmptyState onInviteClick={() => setIsModalOpen(true)} />
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-2 space-y-6">
-            <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-darker flex items-center gap-2">
-                  <HiUserGroup className="w-4 h-4 text-brand" />
-                  <span>Invited Collaborators</span>
-                  <span className="text-xs text-gray-400 font-normal">
-                    ({collaborators.length})
-                  </span>
-                </h3>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                  Full Access
+          <section className="space-y-3 pt-4 border-t border-muted/20">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-darker flex items-center gap-2">
+                <HiUserGroup className="w-4 h-4 text-brand" />
+                <span>Contributors</span>
+                <span className="text-xs text-gray-400 font-normal">
+                  ({contributors.length})
                 </span>
-              </div>
+              </h3>
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                Can add & generate
+              </span>
+            </div>
 
-              <div className="space-y-3">
-                {collaborators.length === 0 ? (
-                  <div className="text-xs text-gray-400 italic p-3">
-                    No invited collaborators yet. Invite people by email to edit this space.
-                  </div>
-                ) : (
-                  collaborators.map((member) => (
-                    <CommunityMemberRow key={member.id} member={member} />
-                  ))
-                )}
-              </div>
-            </section>
+            <div className="space-y-3">
+              {contributors.length === 0 ? (
+                <div className="text-xs text-gray-400 italic p-3">
+                  No contributors yet. Promote a viewer below to let them add files and generate materials.
+                </div>
+              ) : (
+                contributors.map((member) => (
+                  <CommunityMemberRow
+                    key={member.id}
+                    member={member}
+                    canManage={isOwner}
+                    busy={busyUserId === member.id}
+                    onPromote={() => handleChangeRole(member.id, "collaborator")}
+                    onDemote={() => handleChangeRole(member.id, "viewer")}
+                    onRemove={() => handleRemoveMember(member.id)}
+                  />
+                ))
+              )}
+            </div>
+          </section>
 
-            <section className="space-y-3 pt-4 border-t border-muted/20">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-darker flex items-center gap-2">
-                  <HiLink className="w-4 h-4 text-emerald-600" />
-                  <span>Public Link Visitors</span>
-                  <span className="text-xs text-gray-400 font-normal">
-                    ({linkTakers.length})
-                  </span>
-                </h3>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                  Quiz & Flashcard Access
+          <section className="space-y-3 pt-4 border-t border-muted/20">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-darker flex items-center gap-2">
+                <HiUsers className="w-4 h-4 text-emerald-600" />
+                <span>Viewers</span>
+                <span className="text-xs text-gray-400 font-normal">
+                  ({viewers.length})
                 </span>
-              </div>
+              </h3>
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                Study access
+              </span>
+            </div>
 
-              <div className="space-y-3">
-                {linkTakers.length === 0 ? (
-                  <div className="text-xs text-gray-400 italic p-3">
-                    {shareState.shareEnabled
-                      ? "No one has visited via the public link yet."
-                      : "Enable the public link above to allow open quiz/flashcard access."}
-                  </div>
-                ) : (
-                  linkTakers.map((member) => (
-                    <CommunityMemberRow key={member.id} member={member} />
-                  ))
-                )}
-              </div>
-            </section>
-          </div>
-
-          <div className="lg:col-span-1 sticky top-20">
-            <Leaderboard
-              entries={leaderboard}
-              currentUserId={currentUserId}
-              title="Overall Space Leaderboard"
-              subtext="Combined performance across quizzes & active recall"
-              showRoleBadges={true}
-            />
-          </div>
+            <div className="space-y-3">
+              {viewers.length === 0 ? (
+                <div className="text-xs text-gray-400 italic p-3">
+                  {shareState.shareEnabled
+                    ? "No one has saved this space yet. Share the invite link to get people in."
+                    : "Enable the public link above so people can join this space."}
+                </div>
+              ) : (
+                viewers.map((member) => (
+                  <CommunityMemberRow
+                    key={member.id}
+                    member={member}
+                    canManage={isOwner}
+                    busy={busyUserId === member.id}
+                    onPromote={() => handleChangeRole(member.id, "collaborator")}
+                    onRemove={() => handleRemoveMember(member.id)}
+                  />
+                ))
+              )}
+            </div>
+          </section>
         </div>
-      )}
+
+        <div className="lg:col-span-1 sticky top-20">
+          <Leaderboard
+            entries={leaderboard}
+            currentUserId={currentUserId}
+            title="Overall Space Leaderboard"
+            subtext="Combined performance across quizzes & active recall"
+            showRoleBadges={true}
+          />
+        </div>
+      </div>
     </div>
   );
 }

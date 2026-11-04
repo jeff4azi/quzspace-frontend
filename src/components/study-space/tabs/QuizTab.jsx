@@ -79,7 +79,7 @@ function CardSkeleton() {
   );
 }
 
-export default function QuizTab({ isReadOnly = false }) {
+export default function QuizTab({ isReadOnly = false, canStudy = true, preview = null }) {
   const { id: spaceId } = useParams();
   const [quizzes, setQuizzes] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,6 +89,13 @@ export default function QuizTab({ isReadOnly = false }) {
   const [deletingIds, setDeletingIds] = useState({});
 
   const loadQuizzes = useCallback(async () => {
+    if (preview) {
+      const list = Array.isArray(preview.quizzes) ? preview.quizzes : [];
+      setQuizzes(list.map(normalizeQuizListItem));
+      setError(null);
+      setLoading(false);
+      return;
+    }
     if (!spaceId) return;
     setLoading(true);
     setError(null);
@@ -115,7 +122,7 @@ export default function QuizTab({ isReadOnly = false }) {
     } finally {
       setLoading(false);
     }
-  }, [spaceId, reloadKey]);
+  }, [spaceId, reloadKey, preview]);
 
   useEffect(() => {
     void loadQuizzes();
@@ -227,8 +234,14 @@ export default function QuizTab({ isReadOnly = false }) {
               onDelete={handleDeleteQuiz}
               onRetake={() => {}}
               isDeleting={!!deletingIds[quiz.id]}
+              canManage={!isReadOnly}
+              canStudy={canStudy}
             />
           ))}
+        </div>
+      ) : isReadOnly ? (
+        <div className="text-center text-xs text-gray-400 italic py-14">
+          No quizzes have been generated for this space yet.
         </div>
       ) : (
         <QuizEmptyState onGenerateClick={() => setIsModalOpen(true)} />

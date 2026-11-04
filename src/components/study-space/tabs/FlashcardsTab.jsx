@@ -124,7 +124,7 @@ function normalizeCardsList(resp) {
   return list.map(normalizeCard);
 }
 
-export default function FlashcardsTab({ isReadOnly = false }) {
+export default function FlashcardsTab({ isReadOnly = false, canStudy = true, preview = null }) {
   const { id: spaceId } = useParams();
   const [cards, setCards] = useState([]);
   const [viewMode, setViewMode] = useState("grid");
@@ -263,6 +263,13 @@ export default function FlashcardsTab({ isReadOnly = false }) {
 
   // Initial mount: load + auto-lazy-trigger on 425
   useEffect(() => {
+    if (preview) {
+      setCards(normalizeCardsList(preview.flashcards || []));
+      setLoading(false);
+      setIsNotGenerated(false);
+      setError(null);
+      return;
+    }
     setLoading(true);
     pollAttemptRef.current = 0;
     setPollAttempt(0);
@@ -271,11 +278,11 @@ export default function FlashcardsTab({ isReadOnly = false }) {
       clearLazyTimer();
       clearPollTimer();
     };
-  }, [spaceId, reloadKey, loadFlashcards]);
+  }, [spaceId, reloadKey, loadFlashcards, preview]);
 
   const handleToggleMastered = useCallback(
     async (cardId) => {
-      if (!spaceId || isReadOnly) return;
+      if (!spaceId || !canStudy) return;
       const current = cards.find((c) => c.id === cardId);
       const nextVal = !current?.mastered;
       // optimistic update
@@ -291,7 +298,7 @@ export default function FlashcardsTab({ isReadOnly = false }) {
         });
       }
     },
-    [spaceId, isReadOnly, cards],
+    [spaceId, canStudy, cards],
   );
 
   const handleRegenerate = useCallback(async () => {
@@ -369,6 +376,13 @@ export default function FlashcardsTab({ isReadOnly = false }) {
   }
 
   if (!cards || cards.length === 0) {
+    if (isReadOnly) {
+      return (
+        <div className="max-w-4xl text-center text-xs text-gray-400 italic py-14">
+          No flashcards have been generated for this space yet.
+        </div>
+      );
+    }
     return <FlashcardsEmptyState onGenerateClick={handleEmptyGenerate} />;
   }
 
@@ -452,6 +466,7 @@ export default function FlashcardsTab({ isReadOnly = false }) {
               card={card}
               cardNumber={idx + 1}
               onToggleMastered={handleToggleMastered}
+              canMaster={canStudy}
             />
           ))}
         </div>
@@ -459,6 +474,7 @@ export default function FlashcardsTab({ isReadOnly = false }) {
         <FlashcardStudyMode
           cards={cards}
           onToggleMastered={handleToggleMastered}
+          canMaster={canStudy}
         />
       )}
 

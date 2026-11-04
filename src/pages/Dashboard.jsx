@@ -63,6 +63,7 @@ function normalizeSpace(s = {}) {
         ? s.progress_percent
         : s.progressPercent ?? 0,
     accentStyle: s.accent_style || s.accentStyle || pickAccent(String(s.id || "")),
+    role: s.role || s.user_role || null,
     activeMembers: Array.isArray(s.active_members)
       ? s.active_members.map((m) => ({
           id: m.id,
@@ -157,6 +158,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleLeaveSpace = async (spaceId) => {
+    if (!window.confirm("Remove this shared space from your dashboard? You can rejoin later with the link.")) return;
+    try {
+      await api.delete(`/spaces/${spaceId}/membership/me`);
+      setSpaces((prev) => prev.filter((s) => s.id !== spaceId));
+    } catch (err) {
+      alert(err?.message || "Failed to leave space");
+    }
+  };
+
   const handleRetry = () => setAttempt((n) => n + 1);
 
   return (
@@ -212,8 +223,10 @@ export default function Dashboard() {
                 progressPercent={space.progressPercent}
                 accentStyle={space.accentStyle}
                 activeMembers={space.activeMembers}
+                role={space.role}
                 onDelete={handleDeleteSpace}
                 onRename={handleRenameSpace}
+                onLeave={handleLeaveSpace}
               />
             ))}
           </div>

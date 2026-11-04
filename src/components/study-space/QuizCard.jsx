@@ -34,6 +34,8 @@ export default function QuizCard({
   onDelete,
   onRetake,
   isDeleting = false,
+  canManage = true,
+  canStudy = true,
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const badgeStyle = getDifficultyBadge(quiz.difficulty);
@@ -71,6 +73,7 @@ export default function QuizCard({
           </div>
 
           {/* Overflow Menu */}
+          {(canManage || canStudy) && (
           <div className="relative">
             <button
               type="button"
@@ -88,15 +91,17 @@ export default function QuizCard({
             {/* Dropdown Menu */}
             {showDropdown && (
               <div className="absolute right-0 top-8 w-44 bg-white rounded-xl shadow-xl border border-muted/30 p-1.5 z-50 animate-in fade-in">
-                <Link
-                  to={`/spaces/${spaceId}/quiz/${quiz.id}`}
-                  onClick={() => setShowDropdown(false)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
-                >
-                  <HiOutlineArrowPath className="w-4 h-4 text-gray-500" />
-                  <span>Retake Quiz</span>
-                </Link>
-                {quiz.bestScore !== null && (
+                {canStudy && (
+                  <Link
+                    to={`/spaces/${spaceId}/quiz/${quiz.id}`}
+                    onClick={() => setShowDropdown(false)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
+                  >
+                    <HiOutlineArrowPath className="w-4 h-4 text-gray-500" />
+                    <span>Retake Quiz</span>
+                  </Link>
+                )}
+                {canStudy && quiz.bestScore !== null && (
                   <Link
                     to={`/spaces/${spaceId}/quiz/${quiz.id}/history`}
                     onClick={() => setShowDropdown(false)}
@@ -106,16 +111,19 @@ export default function QuizCard({
                     <span>View Results</span>
                   </Link>
                 )}
-                <button
-                  onClick={(e) => handleAction(e, onDelete, "Delete Quiz")}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left"
-                >
-                  <HiOutlineTrash className="w-4 h-4 text-rose-500" />
-                  <span>Delete Quiz</span>
-                </button>
+                {canManage && (
+                  <button
+                    onClick={(e) => handleAction(e, onDelete, "Delete Quiz")}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left"
+                  >
+                    <HiOutlineTrash className="w-4 h-4 text-rose-500" />
+                    <span>Delete Quiz</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* Title */}
@@ -189,13 +197,20 @@ export default function QuizCard({
         )}
 
         {/* Take Quiz Button */}
-        <Link
-          to={`/spaces/${spaceId}/quiz/${quiz.id}`}
-          className="w-full inline-flex items-center justify-center gap-2 bg-brand text-light py-2.5 px-4 rounded-xl text-xs font-bold shadow-xs hover:bg-darker transition-all cursor-pointer"
-        >
-          <HiOutlinePlay className="w-4 h-4" />
-          <span>{quiz.bestScore !== null ? "Retake Quiz" : "Take Quiz"}</span>
-        </Link>
+        {canStudy ? (
+          <Link
+            to={`/spaces/${spaceId}/quiz/${quiz.id}`}
+            className="w-full inline-flex items-center justify-center gap-2 bg-brand text-light py-2.5 px-4 rounded-xl text-xs font-bold shadow-xs hover:bg-darker transition-all cursor-pointer"
+          >
+            <HiOutlinePlay className="w-4 h-4" />
+            <span>{quiz.bestScore !== null ? "Retake Quiz" : "Take Quiz"}</span>
+          </Link>
+        ) : (
+          <div className="w-full inline-flex items-center justify-center gap-2 bg-gray-100 text-gray-400 py-2.5 px-4 rounded-xl text-xs font-bold select-none cursor-not-allowed">
+            <HiOutlinePlay className="w-4 h-4" />
+            <span>Sign in to take this quiz</span>
+          </div>
+        )}
       </div>
     </div>
   );

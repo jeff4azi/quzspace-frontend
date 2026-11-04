@@ -89,7 +89,7 @@ function PollingLoader({ label }) {
   );
 }
 
-export default function SummaryTab({ isReadOnly = false }) {
+export default function SummaryTab({ isReadOnly = false, preview = null }) {
   const { id: spaceId } = useParams();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -137,8 +137,17 @@ export default function SummaryTab({ isReadOnly = false }) {
   }, [spaceId, reloadKey]);
 
   useEffect(() => {
+    if (preview) {
+      const normalized = normalizeSummary(preview);
+      const ready = hasContent(normalized);
+      setSummary(ready ? normalized : null);
+      setNotGenerated(!ready);
+      setError(null);
+      setLoading(false);
+      return;
+    }
     loadSummary();
-  }, [loadSummary]);
+  }, [preview, loadSummary]);
 
   useEffect(() => {
     if (!notGenerated) return;
@@ -240,6 +249,13 @@ export default function SummaryTab({ isReadOnly = false }) {
   }
 
   if (notGenerated || !hasContent(summary)) {
+    if (isReadOnly && !isRegenerating) {
+      return (
+        <div className="max-w-4xl text-center text-xs text-gray-400 italic py-14">
+          No AI summary has been generated for this space yet.
+        </div>
+      );
+    }
     return (
       <div className="max-w-4xl space-y-4">
         <SummaryEmptyState onGenerateClick={handleGenerateOrRegenerate} />

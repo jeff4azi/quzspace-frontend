@@ -7,7 +7,6 @@ import {
 } from "../components/study-space/SpaceTabs";
 import Button from "../components/ui/Button";
 import ErrorBanner from "../components/shared/ErrorBanner";
-import InviteCollaboratorModal from "../components/study-space/InviteCollaboratorModal";
 import { SpaceDataProvider, useSpaceData } from "../hooks/useSpaceData";
 import api, { fetchWithIdempotency } from "../lib/api";
 import {
@@ -18,7 +17,6 @@ import {
   HiOutlineShare,
   HiOutlineSparkles,
   HiCheckCircle,
-  HiUserPlus,
   HiXMark,
 } from "react-icons/hi2";
 
@@ -78,7 +76,6 @@ function OverviewInner() {
     shareEnabled: false,
   });
   const [shareToast, setShareToast] = useState({ show: false, msg: "", kind: "success" });
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   useEffect(() => {
     const COLLAPSE_START = 60;
@@ -262,15 +259,17 @@ function OverviewInner() {
             <span>Back to Dashboard</span>
           </Link>
 
-          <Button
-            variant="secondary"
-            onClick={handleShare}
-            isLoading={shareState.isLoading}
-            className="py-1.5 px-3.5 text-xs font-bold"
-          >
-            <HiOutlineShare className="w-4 h-4" />
-            <span>Share Space</span>
-          </Button>
+          {space.isOwner && (
+            <Button
+              variant="secondary"
+              onClick={handleShare}
+              isLoading={shareState.isLoading}
+              className="py-1.5 px-3.5 text-xs font-bold"
+            >
+              <HiOutlineShare className="w-4 h-4" />
+              <span>Share Space</span>
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -312,7 +311,7 @@ function OverviewInner() {
       {isCollapsed && <div className="h-[84px]" aria-hidden="true" />}
 
       <div className={activeTabId === "chat" ? "" : "min-h-75"}>
-        <ActiveTabComponent />
+        <ActiveTabComponent isReadOnly={!space.canEdit} canStudy={true} />
       </div>
 
       {shareToast.show && (
@@ -331,16 +330,9 @@ function OverviewInner() {
           <div className="flex-1 space-y-2">
             <span className="text-xs font-semibold block">{shareToast.msg}</span>
             {shareToast.kind === "success" && (
-              <button
-                onClick={() => {
-                  setShareToast({ ...shareToast, show: false });
-                  setIsInviteOpen(true);
-                }}
-                className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-white/15 hover:bg-white/25 px-2.5 py-1 rounded-lg transition-colors"
-              >
-                <HiUserPlus className="w-3.5 h-3.5" />
-                <span>Invite by email</span>
-              </button>
+              <span className="inline-block text-[11px] font-medium text-light/80">
+                Anyone with this link can view the space; they can save it to their own dashboard to study.
+              </span>
             )}
           </div>
           <button
@@ -351,12 +343,6 @@ function OverviewInner() {
           </button>
         </div>
       )}
-
-      <InviteCollaboratorModal
-        isOpen={isInviteOpen}
-        onClose={() => setIsInviteOpen(false)}
-        spaceId={spaceId}
-      />
     </>
   );
 }

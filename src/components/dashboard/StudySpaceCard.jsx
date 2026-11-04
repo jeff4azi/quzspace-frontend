@@ -13,7 +13,8 @@ import {
   HiOutlineFolder,
   HiOutlinePencil,
   HiOutlineShare,
-  HiOutlineTrash
+  HiOutlineTrash,
+  HiOutlineArrowRightOnRectangle
 } from "react-icons/hi2";
 import AvatarStack from "../shared/AvatarStack";
 import api from "../../lib/api";
@@ -38,11 +39,14 @@ export default function StudySpaceCard({
   progressPercent,
   accentStyle = "from-brand to-gray-700",
   activeMembers = [],
+  role = "owner",
   onDelete,
   onRename,
+  onLeave,
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const SubjectIcon = getSubjectIcon(subject);
+  const isOwner = !role || role === "owner";
 
   const handleDropdownAction = async (e, actionName) => {
     e.preventDefault();
@@ -52,6 +56,8 @@ export default function StudySpaceCard({
       if (onDelete) onDelete(id);
     } else if (actionName === "Rename") {
       if (onRename) onRename(id, title);
+    } else if (actionName === "Leave") {
+      if (onLeave) onLeave(id);
     } else if (actionName === "Share") {
       try {
         const resp = await api.post(`/spaces/${id}/share`, { filesVisible: true });
@@ -110,27 +116,39 @@ export default function StudySpaceCard({
                     e.stopPropagation();
                   }}
                 >
-                  <button
-                    onClick={(e) => handleDropdownAction(e, "Rename")}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
-                  >
-                    <HiOutlinePencil className="w-4 h-4 text-gray-500" />
-                    <span>Rename</span>
-                  </button>
-                  <button
-                    onClick={(e) => handleDropdownAction(e, "Share")}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
-                  >
-                    <HiOutlineShare className="w-4 h-4 text-gray-500" />
-                    <span>Share</span>
-                  </button>
-                  <button
-                    onClick={(e) => handleDropdownAction(e, "Delete")}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left"
-                  >
-                    <HiOutlineTrash className="w-4 h-4 text-rose-500" />
-                    <span>Delete</span>
-                  </button>
+                  {isOwner ? (
+                    <>
+                      <button
+                        onClick={(e) => handleDropdownAction(e, "Rename")}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
+                      >
+                        <HiOutlinePencil className="w-4 h-4 text-gray-500" />
+                        <span>Rename</span>
+                      </button>
+                      <button
+                        onClick={(e) => handleDropdownAction(e, "Share")}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left"
+                      >
+                        <HiOutlineShare className="w-4 h-4 text-gray-500" />
+                        <span>Share</span>
+                      </button>
+                      <button
+                        onClick={(e) => handleDropdownAction(e, "Delete")}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left"
+                      >
+                        <HiOutlineTrash className="w-4 h-4 text-rose-500" />
+                        <span>Delete</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={(e) => handleDropdownAction(e, "Leave")}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left"
+                    >
+                      <HiOutlineArrowRightOnRectangle className="w-4 h-4 text-rose-500" />
+                      <span>Leave space</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>

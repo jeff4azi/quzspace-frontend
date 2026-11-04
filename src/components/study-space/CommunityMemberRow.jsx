@@ -1,6 +1,23 @@
-import { HiAcademicCap, HiRectangleStack, HiUser } from "react-icons/hi2";
+import {
+  HiAcademicCap,
+  HiRectangleStack,
+  HiUser,
+  HiUsers,
+  HiShieldCheck,
+  HiUserPlus,
+  HiUserMinus,
+  HiTrash,
+} from "react-icons/hi2";
+import { CgSpinner } from "react-icons/cg";
 
-export default function CommunityMemberRow({ member }) {
+export default function CommunityMemberRow({
+  member,
+  canManage = false,
+  busy = false,
+  onPromote,
+  onDemote,
+  onRemove,
+}) {
   const {
     name,
     avatarInitials,
@@ -15,11 +32,12 @@ export default function CommunityMemberRow({ member }) {
 
   const isCollaborator = role === "collaborator";
   const isOwner = role === "owner";
+  const isViewer = !isCollaborator && !isOwner;
 
   let roleBadge = (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-muted/20">
-      <HiUser className="w-3 h-3 text-gray-400" />
-      Visitor
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+      <HiUsers className="w-3 h-3 text-emerald-600" />
+      Viewer
     </span>
   );
 
@@ -33,11 +51,15 @@ export default function CommunityMemberRow({ member }) {
   } else if (isOwner) {
     roleBadge = (
       <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-        <HiUser className="w-3 h-3 text-amber-600" />
+        <HiShieldCheck className="w-3 h-3 text-amber-600" />
         Owner
       </span>
     );
   }
+
+  const showActions = canManage && !isOwner;
+  const showPromote = showActions && isViewer;
+  const showDemote = showActions && isCollaborator;
 
   return (
     <div className="bg-white p-4 rounded-2xl border border-muted/30 shadow-2xs hover:border-brand/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -60,26 +82,77 @@ export default function CommunityMemberRow({ member }) {
         </div>
       </div>
 
-      {/* Right: Stats */}
-      <div className="flex items-center gap-4 text-xs text-gray-500 font-medium self-end sm:self-center">
-        {quizzesTaken !== undefined && (
-          <span className="flex items-center gap-1">
-            <HiAcademicCap className="w-4 h-4 text-brand" />
-            {quizzesTaken} quiz{quizzesTaken === 1 ? "" : "zes"}
-          </span>
-        )}
+      {/* Right: Stats + Owner actions */}
+      <div className="flex items-center gap-4 self-end sm:self-center">
+        <div className="flex items-center gap-4 text-xs text-gray-500 font-medium">
+          {quizzesTaken !== undefined && (
+            <span className="flex items-center gap-1">
+              <HiAcademicCap className="w-4 h-4 text-brand" />
+              {quizzesTaken} quiz{quizzesTaken === 1 ? "" : "zes"}
+            </span>
+          )}
 
-        {flashcardsReviewed !== undefined && (
-          <span className="flex items-center gap-1">
-            <HiRectangleStack className="w-4 h-4 text-muted" />
-            {flashcardsReviewed} cards
-          </span>
-        )}
+          {flashcardsReviewed !== undefined && (
+            <span className="flex items-center gap-1">
+              <HiRectangleStack className="w-4 h-4 text-muted" />
+              {flashcardsReviewed} cards
+            </span>
+          )}
 
-        {avgScore !== undefined && (
-          <span className="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-            {avgScore}% avg
-          </span>
+          {avgScore !== undefined && (
+            <span className="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+              {avgScore}% avg
+            </span>
+          )}
+        </div>
+
+        {showActions && (
+          <div className="flex items-center gap-1.5 pl-3 border-l border-muted/20">
+            {busy ? (
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-400">
+                <CgSpinner className="w-4 h-4 animate-spin" />
+                Saving
+              </span>
+            ) : (
+              <>
+                {showPromote && (
+                  <button
+                    type="button"
+                    onClick={onPromote}
+                    title="Make contributor"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-brand bg-brand/10 hover:bg-brand/20 transition-colors"
+                  >
+                    <HiUserPlus className="w-3.5 h-3.5" />
+                    Make contributor
+                  </button>
+                )}
+
+                {showDemote && (
+                  <button
+                    type="button"
+                    onClick={onDemote}
+                    title="Make viewer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-gray-600 bg-light hover:bg-muted/20 transition-colors"
+                  >
+                    <HiUserMinus className="w-3.5 h-3.5" />
+                    Make viewer
+                  </button>
+                )}
+
+                {onRemove && (
+                  <button
+                    type="button"
+                    onClick={onRemove}
+                    title="Remove from space"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
+                  >
+                    <HiTrash className="w-3.5 h-3.5" />
+                    Remove
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         )}
       </div>
     </div>

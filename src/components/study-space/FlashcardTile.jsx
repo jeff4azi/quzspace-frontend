@@ -6,7 +6,7 @@ import {
   HiSparkles
 } from "react-icons/hi2";
 
-export default function FlashcardTile({ card, cardNumber, onToggleMastered }) {
+export default function FlashcardTile({ card, cardNumber, onToggleMastered, canMaster = true }) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleCardClick = () => {
@@ -74,27 +74,31 @@ export default function FlashcardTile({ card, cardNumber, onToggleMastered }) {
               <HiSparkles className="w-3 h-3 text-amber-300" /> Answer
             </span>
 
-            <button
-              type="button"
-              onClick={handleMasteredClick}
-              className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg transition-colors ${
-                card.mastered
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                  : "bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white"
-              }`}
-            >
-              {card.mastered ? (
-                <>
-                  <HiCheckCircle className="w-4 h-4 text-emerald-400" />
-                  <span>Mastered</span>
-                </>
-              ) : (
-                <>
-                  <HiOutlineCheckCircle className="w-4 h-4" />
-                  <span>Mark Mastered</span>
-                </>
-              )}
-            </button>
+            {canMaster ? (
+              <button
+                type="button"
+                onClick={handleMasteredClick}
+                className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg transition-colors ${
+                  card.mastered
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                    : "bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white"
+                }`}
+              >
+                {card.mastered ? (
+                  <>
+                    <HiCheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span>Mastered</span>
+                  </>
+                ) : (
+                  <>
+                    <HiOutlineCheckCircle className="w-4 h-4" />
+                    <span>Mark Mastered</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <span className="text-[11px] font-semibold text-gray-500">Preview</span>
+            )}
           </div>
 
           {/* Answer Content */}

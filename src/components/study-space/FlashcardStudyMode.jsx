@@ -9,7 +9,7 @@ import {
   HiSparkles
 } from "react-icons/hi2";
 
-export default function FlashcardStudyMode({ cards, onToggleMastered }) {
+export default function FlashcardStudyMode({ cards, onToggleMastered, canMaster = true }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -134,25 +134,33 @@ export default function FlashcardStudyMode({ cards, onToggleMastered }) {
             </div>
 
             {/* Back Side Interactive Action Buttons */}
-            <div className="pt-4 border-t border-gray-800 grid grid-cols-2 gap-3" onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                onClick={handleStillLearning}
-                className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <HiOutlineXMark className="w-4 h-4" />
-                <span>Still Learning</span>
-              </button>
+            {canMaster ? (
+              <div className="pt-4 border-t border-gray-800 grid grid-cols-2 gap-3" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={handleStillLearning}
+                  className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <HiOutlineXMark className="w-4 h-4" />
+                  <span>Still Learning</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={handleGotIt}
-                className="py-2.5 px-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-colors"
-              >
-                <HiCheckCircle className="w-4 h-4" />
-                <span>Got It!</span>
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={handleGotIt}
+                  className="py-2.5 px-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-colors"
+                >
+                  <HiCheckCircle className="w-4 h-4" />
+                  <span>Got It!</span>
+                </button>
+              </div>
+            ) : (
+              <div className="pt-4 border-t border-gray-800 text-center">
+                <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                  Preview · Sign in to track mastery
+                </span>
+              </div>
+            )}
 
           </div>
         </div>

@@ -67,7 +67,7 @@ function RowSkeleton() {
   );
 }
 
-export default function FilesTab() {
+export default function FilesTab({ isReadOnly = false }) {
   const { id: spaceId } = useParams();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -187,23 +187,25 @@ export default function FilesTab() {
           </span>
         </div>
 
-        <Button
-          variant={showAddFiles ? "secondary" : "primary"}
-          onClick={() => setShowAddFiles(!showAddFiles)}
-          className="w-full sm:w-auto py-2.5 px-4 text-xs font-bold"
-        >
-          {showAddFiles ? (
-            <>
-              <HiXMark className="w-4 h-4" />
-              <span>Close Dropzone</span>
-            </>
-          ) : (
-            <>
-              <HiPlus className="w-4 h-4" />
-              <span>Add Files</span>
-            </>
-          )}
-        </Button>
+        {!isReadOnly && (
+          <Button
+            variant={showAddFiles ? "secondary" : "primary"}
+            onClick={() => setShowAddFiles(!showAddFiles)}
+            className="w-full sm:w-auto py-2.5 px-4 text-xs font-bold"
+          >
+            {showAddFiles ? (
+              <>
+                <HiXMark className="w-4 h-4" />
+                <span>Close Dropzone</span>
+              </>
+            ) : (
+              <>
+                <HiPlus className="w-4 h-4" />
+                <span>Add Files</span>
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       {error && (
@@ -214,7 +216,7 @@ export default function FilesTab() {
         />
       )}
 
-      {showAddFiles && (
+      {!isReadOnly && showAddFiles && (
         <div className="bg-white p-6 rounded-2xl border border-brand/30 shadow-md animate-in fade-in space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-brand uppercase tracking-wider">
@@ -235,12 +237,19 @@ export default function FilesTab() {
             <FileRow
               key={file.id}
               file={file}
+              canManage={!isReadOnly}
               onDelete={handleDeleteFile}
             />
           ))}
         </div>
       ) : !error ? (
-        <FilesEmptyState onAddFilesClick={() => setShowAddFiles(true)} />
+        isReadOnly ? (
+          <div className="text-center text-xs text-gray-400 italic py-10">
+            No files have been added to this space yet.
+          </div>
+        ) : (
+          <FilesEmptyState onAddFilesClick={() => setShowAddFiles(true)} />
+        )
       ) : null}
 
     </div>
