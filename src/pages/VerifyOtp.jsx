@@ -133,8 +133,8 @@ export default function VerifyOtp() {
       title={initialMode === "signup" ? "Confirm your email" : "Verify your email"}
       subtitle={
         initialMode === "signup"
-          ? `We sent a 6-digit verification code to ${email || "your email"}. Enter it below to activate your account.`
-          : `We sent a 6-digit one-time code to ${email || "your email"}. Enter it below to continue.`
+          ? `We emailed a link and a 6-digit code to ${email || "your email"}. Click the link, or enter the code below to activate your account.`
+          : `We emailed a sign-in link and a 6-digit code to ${email || "your email"}. Click the link, or enter the code below to continue.`
       }
       footerText={`Not ${email || "your email"}?`}
       footerLinkText="Use a different email"

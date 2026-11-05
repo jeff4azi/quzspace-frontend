@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VerifyOtp from "./pages/VerifyOtp";
+import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import CreateStudySpace from "./pages/CreateStudySpace";
 import StudySpaceOverview from "./pages/StudySpaceOverview";
@@ -45,6 +46,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
             <Route
               path="/dashboard"

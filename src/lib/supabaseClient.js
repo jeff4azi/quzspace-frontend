@@ -17,11 +17,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
+// Where Supabase email links (magic link / confirm signup) send the user back to.
+// The AuthCallback page lets the client finish the session exchange, then routes on.
+export function getAuthRedirectUrl() {
+  const base = import.meta.env.VITE_APP_URL || window.location.origin;
+  return `${base.replace(/\/$/, "")}/auth/callback`;
+}
+
 export async function requestOtpSignIn({ email, options = {} }) {
   const { data, error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: false,
+      emailRedirectTo: getAuthRedirectUrl(),
       ...options,
     },
   });
@@ -43,6 +51,9 @@ export async function resendOtp({ email, type = "signup" }) {
   const { data, error } = await supabase.auth.resend({
     type,
     email,
+    options: {
+      emailRedirectTo: getAuthRedirectUrl(),
+    },
   });
   if (error) throw error;
   return data;
@@ -62,6 +73,7 @@ export async function signUp({ email, password, name }) {
     email,
     password,
     options: {
+      emailRedirectTo: getAuthRedirectUrl(),
       data: {
         name,
         full_name: name,
